@@ -115,7 +115,7 @@ const useVisiStore = create(
       // ── TASKS ─────────────────────────────────────────────────────────
       tasks: {},
 
-      createTask({ patientId, type, description, priority, labels }) {
+      createTask({ patientId, type, description, priority, labels, notes }) {
         set(state => {
           const patient = state.patients[patientId]
           if (!patient) return state
@@ -132,6 +132,7 @@ const useVisiStore = create(
                 description,
                 priority: priority || 'normal',
                 labels: labels || [],
+                notes: notes || '',
                 status: 'iniciada',
                 createdAt: new Date().toISOString(),
               },

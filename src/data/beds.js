@@ -2375,5 +2375,14 @@ export const BEDS = [
     "cama": "CAMA 2",
     "serviceId": "uti",
     "teamId": "uti_main"
-  }
+  },
+  // Camas HosDom (agregadas manualmente)
+  ...Array.from({ length: 200 }, (_, i) => ({
+    id: `hosdom-${String(i + 1).padStart(3, '0')}`,
+    piso: "HosDom",
+    sala: "HosDom",
+    cama: `CAMA HOSDOM ${i + 1}`,
+    serviceId: "hosdom",
+    teamId: "hosdom_main",
+  }))
 ]

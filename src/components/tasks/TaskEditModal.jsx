@@ -1,19 +1,18 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import LabelChip from '../ui/LabelChip'
 import { TASK_TYPES } from '../../data/hierarchy'
 import useVisiStore from '../../store/useVisiStore'
 
-export default function TaskCreateModal({ patient, onClose }) {
-  const createTask = useVisiStore(s => s.createTask)
+export default function TaskEditModal({ task, onClose }) {
+  const updateTask = useVisiStore(s => s.updateTask)
   const labels = useVisiStore(s => s.labels)
 
-  const [type, setType] = useState(TASK_TYPES[0].id)
-  const [description, setDescription] = useState('')
-  const [notes, setNotes] = useState('')
-  const [priority, setPriority] = useState('normal')
-  const [selectedLabels, setSelectedLabels] = useState([])
+  const [type, setType] = useState(task.type)
+  const [description, setDescription] = useState(task.description)
+  const [notes, setNotes] = useState(task.notes || '')
+  const [priority, setPriority] = useState(task.priority || 'normal')
+  const [selectedLabels, setSelectedLabels] = useState(task.labels || [])
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -24,12 +23,18 @@ export default function TaskCreateModal({ patient, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!description.trim()) return
-    createTask({ patientId: patient.id, type, description: description.trim(), priority, labels: selectedLabels, notes: notes.trim() })
+    updateTask(task.id, {
+      type,
+      description: description.trim(),
+      notes: notes.trim(),
+      priority,
+      labels: selectedLabels,
+    })
     onClose()
   }
 
   return (
-    <Modal title={`Nueva tarea — ${patient.name}`} onClose={onClose}>
+    <Modal title="Editar tarea" onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de tarea</label>
@@ -56,7 +61,6 @@ export default function TaskCreateModal({ patient, onClose }) {
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Describe el pendiente..."
             rows={3}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
             autoFocus
@@ -120,7 +124,7 @@ export default function TaskCreateModal({ patient, onClose }) {
 
         <div className="flex gap-2 pt-1">
           <Button type="submit" variant="primary" className="flex-1" disabled={!description.trim()}>
-            Crear tarea
+            Guardar cambios
           </Button>
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancelar

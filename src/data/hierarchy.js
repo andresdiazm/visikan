@@ -1,9 +1,12 @@
 export const SERVICES = [
-  { id: 'medicina', label: 'Medicina',  color: '#1565C0', icon: '🏥' },
-  { id: 'cirugia',  label: 'Cirugía',   color: '#00695C', icon: '🔪' },
-  { id: 'uci',      label: 'UCI',       color: '#AD1457', icon: '❤️' },
-  { id: 'uti',      label: 'UTI',       color: '#E65100', icon: '⚡' },
-  { id: 'hosdom',   label: 'HosDom',    color: '#4527A0', icon: '🏠' },
+  { id: 'medicina',  label: 'Medicina',       color: '#1565C0', icon: '🏥' },
+  { id: 'cirugia',   label: 'Cirugía',        color: '#00695C', icon: '🔪' },
+  { id: 'uci',       label: 'UCI',            color: '#AD1457', icon: '❤️' },
+  { id: 'uti',       label: 'UTI',            color: '#E65100', icon: '⚡' },
+  { id: 'ucor',      label: 'U. Coronaria',   color: '#C62828', icon: '💓' },
+  { id: 'trauma',    label: 'Traumatología',  color: '#4E342E', icon: '🦴' },
+  { id: 'urologia',  label: 'Urología',       color: '#1B5E20', icon: '🫀' },
+  { id: 'hosdom',    label: 'HosDom',         color: '#4527A0', icon: '🏠' },
 ]
 
 export const TEAMS = {
@@ -15,16 +18,22 @@ export const TEAMS = {
     { id: 'sector5', label: 'Sector 5' },
   ],
   cirugia: [
-    { id: 'coloprocto', label: 'Coloprocto' },
-    { id: 'general',    label: 'General' },
-    { id: 'vascular',   label: 'Vascular' },
+    { id: 'coloprocto',   label: 'Coloprocto' },
+    { id: 'general',      label: 'General' },
+    { id: 'vascular',     label: 'Vascular' },
+    { id: 'plastica',     label: 'Plástica' },
+    { id: 'neurocx',      label: 'NeuroCx' },
+    { id: 'maxilofacial', label: 'Maxilofacial' },
   ],
   uci: [
     { id: 'uci_norte',     label: 'UCI Norte' },
     { id: 'uci_centrosur', label: 'UCI Centro Sur' },
   ],
-  uti:    [{ id: 'uti_main',    label: 'UTI' }],
-  hosdom: [{ id: 'hosdom_main', label: 'HosDom' }],
+  uti:      [{ id: 'uti_main',      label: 'UTI' }],
+  ucor:     [{ id: 'ucor_main',     label: 'U. Coronaria' }],
+  trauma:   [{ id: 'trauma_main',   label: 'Traumatología' }],
+  urologia: [{ id: 'urologia_main', label: 'Urología' }],
+  hosdom:   [{ id: 'hosdom_main',   label: 'HosDom' }],
 }
 
 export const TASK_TYPES = [
