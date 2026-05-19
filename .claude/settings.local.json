@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(node scripts/generate-beds.cjs)",
+      "Bash(npm run *)",
+      "Bash(Start-Sleep -Seconds 4)",
+      "Bash(Get-Content \"C:\\\\Users\\\\Admn\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Admn-OneDrive-SSMN-SDGC-app-claude-VISIKAN\\\\521e8f61-7425-4c9c-96bb-84ead9bd7207\\\\tasks\\\\bvdf832ny.output\" -Tail 20)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\Admn\\\\OneDrive\\\\SSMN\\\\SDGC\\\\app_claude\\\\VISIKAN\\\\.claude\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(Remove-Item -Recurse -Force \"C:\\\\Users\\\\Admn\\\\OneDrive\\\\SSMN\\\\SDGC\\\\app_claude\\\\VISIKAN\\\\node_modules\\\\.vite\" -ErrorAction SilentlyContinue)",
+      "Bash(Write-Host \"Vite cache cleared\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
