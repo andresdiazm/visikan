@@ -83,12 +83,20 @@ const useVisiStore = create((set, get) => ({
 
   // ── EQUIPOS / SECTORES ──────────────────────────────────────────────────────
   async createTeam(serviceId, label) {
-    const id = `team-${Date.now()}`
+    const id  = `team-${Date.now()}`
     const lbl = label.trim()
+    // Actualización optimista
     set(s => ({
       teams: { ...s.teams, [serviceId]: [...(s.teams[serviceId] || []), { id, label: lbl, serviceId }] },
     }))
-    await supabase.from('teams').insert({ id, service_id: serviceId, label: lbl })
+    const { error } = await supabase.from('teams').insert({ id, service_id: serviceId, label: lbl })
+    if (error) {
+      console.error('[VISIKAN] createTeam error:', error.message)
+      // Revertir si falla
+      set(s => ({
+        teams: { ...s.teams, [serviceId]: (s.teams[serviceId] || []).filter(t => t.id !== id) },
+      }))
+    }
   },
 
   async updateTeam(teamId, serviceId, newLabel) {
@@ -99,7 +107,8 @@ const useVisiStore = create((set, get) => ({
         [serviceId]: (s.teams[serviceId] || []).map(t => t.id === teamId ? { ...t, label: lbl } : t),
       },
     }))
-    await supabase.from('teams').update({ label: lbl }).eq('id', teamId)
+    const { error } = await supabase.from('teams').update({ label: lbl }).eq('id', teamId)
+    if (error) console.error('[VISIKAN] updateTeam error:', error.message)
   },
 
   async deleteTeam(teamId, serviceId) {
