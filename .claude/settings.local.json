@@ -24,7 +24,11 @@
       "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__list_projects",
       "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__list_deployments",
       "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_project",
-      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_deployment_build_logs"
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_deployment_build_logs",
+      "Bash(node -e \"require\\('@supabase/supabase-js'\\); console.log\\('ok'\\)\")",
+      "Bash(where vercel *)",
+      "Bash(vercel --version)",
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_runtime_logs"
     ]
   }
 }

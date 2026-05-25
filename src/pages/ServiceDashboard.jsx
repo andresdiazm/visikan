@@ -1,7 +1,7 @@
 import { useParams, Navigate } from 'react-router-dom'
 import Breadcrumb from '../components/layout/Breadcrumb'
 import StatCard from '../components/ui/StatCard'
-import { SERVICES, TEAMS } from '../data/hierarchy'
+import { SERVICES } from '../data/hierarchy'
 import useVisiStore from '../store/useVisiStore'
 import { selectTeamTaskCounts, selectPatientsByTeam } from '../store/selectors'
 
@@ -21,9 +21,8 @@ function TeamStatCard({ serviceId, team }) {
 export default function ServiceDashboard() {
   const { serviceId } = useParams()
   const service = SERVICES.find(s => s.id === serviceId)
+  const teams = useVisiStore(s => s.teams[serviceId] || [])
   if (!service) return <Navigate to="/" replace />
-
-  const teams = TEAMS[serviceId] || []
 
   return (
     <div className="py-2">

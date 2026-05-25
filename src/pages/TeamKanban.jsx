@@ -6,7 +6,7 @@ import KanbanBoard from '../components/kanban/KanbanBoard'
 import LabelManager from '../components/tasks/LabelManager'
 import TaskCreateModal from '../components/tasks/TaskCreateModal'
 import Button from '../components/ui/Button'
-import { SERVICES, TEAMS } from '../data/hierarchy'
+import { SERVICES } from '../data/hierarchy'
 import useVisiStore from '../store/useVisiStore'
 import { selectPatientsByTeam } from '../store/selectors'
 
@@ -28,8 +28,7 @@ export default function TeamKanban() {
   }, [])
 
   const service = SERVICES.find(s => s.id === serviceId)
-  const teams = TEAMS[serviceId] || []
-  const team = teams.find(t => t.id === teamId)
+  const team = useVisiStore(s => (s.teams[serviceId] || []).find(t => t.id === teamId))
 
   const patients = useVisiStore(selectPatientsByTeam(teamId))
   const clearCompleted = useVisiStore(s => s.clearCompletedTasks)

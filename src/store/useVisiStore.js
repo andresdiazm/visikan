@@ -21,12 +21,13 @@ const toTask = r => ({
 
 // ── Carga completa desde Supabase ─────────────────────────────────────────────
 async function fetchAll() {
-  const [bedsR, assignR, patientsR, tasksR, labelsR] = await Promise.all([
+  const [bedsR, assignR, patientsR, tasksR, labelsR, teamsR] = await Promise.all([
     supabase.from('beds').select('*'),
     supabase.from('team_assignments').select('*'),
     supabase.from('patients').select('*'),
     supabase.from('tasks').select('*').order('created_at'),
     supabase.from('labels').select('*'),
+    supabase.from('teams').select('*').order('label'),
   ])
 
   const beds = (bedsR.data || []).map(toBed)
@@ -43,9 +44,16 @@ async function fetchAll() {
   const tasks = {}
   ;(tasksR.data || []).forEach(t => { tasks[t.id] = toTask(t) })
 
+  // teams: { [serviceId]: [{id, label, serviceId}] }
+  const teams = {}
+  ;(teamsR.data || []).forEach(t => {
+    if (!teams[t.service_id]) teams[t.service_id] = []
+    teams[t.service_id].push({ id: t.id, label: t.label, serviceId: t.service_id })
+  })
+
   const labels = (labelsR.data || []).map(l => ({ id: l.id, name: l.name, color: l.color }))
 
-  return { beds, teamAssignments, patients, tasks, labels }
+  return { beds, teamAssignments, patients, tasks, labels, teams }
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -53,6 +61,7 @@ const useVisiStore = create((set, get) => ({
   loaded: false,
   beds: [],
   teamAssignments: {},
+  teams: {},
   patients: {},
   tasks: {},
   labels: [],
@@ -70,6 +79,49 @@ const useVisiStore = create((set, get) => ({
         set(fresh)
       })
       .subscribe()
+  },
+
+  // ── EQUIPOS / SECTORES ──────────────────────────────────────────────────────
+  async createTeam(serviceId, label) {
+    const id = `team-${Date.now()}`
+    const lbl = label.trim()
+    set(s => ({
+      teams: { ...s.teams, [serviceId]: [...(s.teams[serviceId] || []), { id, label: lbl, serviceId }] },
+    }))
+    await supabase.from('teams').insert({ id, service_id: serviceId, label: lbl })
+  },
+
+  async updateTeam(teamId, serviceId, newLabel) {
+    const lbl = newLabel.trim()
+    set(s => ({
+      teams: {
+        ...s.teams,
+        [serviceId]: (s.teams[serviceId] || []).map(t => t.id === teamId ? { ...t, label: lbl } : t),
+      },
+    }))
+    await supabase.from('teams').update({ label: lbl }).eq('id', teamId)
+  },
+
+  async deleteTeam(teamId, serviceId) {
+    const s = get()
+    // Desasignar camas de este equipo en el estado local
+    const key = `${serviceId}__${teamId}`
+    const updatedTA = { ...s.teamAssignments, [key]: [] }
+    // Pacientes de este equipo quedan sin equipo
+    const updatedPatients = Object.fromEntries(
+      Object.entries(s.patients).map(([id, p]) =>
+        p.teamId === teamId ? [id, { ...p, teamId: null }] : [id, p]
+      )
+    )
+    set(s2 => ({
+      teams: { ...s2.teams, [serviceId]: (s2.teams[serviceId] || []).filter(t => t.id !== teamId) },
+      teamAssignments: updatedTA,
+      patients: updatedPatients,
+    }))
+    // Cascada en BD: team_assignments no tiene FK sobre team_id, borrar manualmente
+    await supabase.from('team_assignments').delete().eq('team_id', teamId)
+    await supabase.from('patients').update({ team_id: null }).eq('team_id', teamId)
+    await supabase.from('teams').delete().eq('id', teamId)
   },
 
   // ── CAMAS ───────────────────────────────────────────────────────────────────

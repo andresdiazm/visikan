@@ -1,56 +1,160 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, LayoutDashboard } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import TeamBedList from '../components/beds/TeamBedList'
+import { ChevronDown, ChevronRight, Pencil, Trash2, Plus, Check, X, BedDouble } from 'lucide-react'
 import Button from '../components/ui/Button'
-import { SERVICES, TEAMS } from '../data/hierarchy'
+import TeamBedList from '../components/beds/TeamBedList'
+import { SERVICES } from '../data/hierarchy'
+import useVisiStore from '../store/useVisiStore'
 
+// ── Fila de equipo ────────────────────────────────────────────────────────────
+function TeamRow({ team, serviceId }) {
+  const [editing,  setEditing]  = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [label,    setLabel]    = useState(team.label)
+
+  const updateTeam = useVisiStore(s => s.updateTeam)
+  const deleteTeam = useVisiStore(s => s.deleteTeam)
+
+  const bedCount = useVisiStore(s => {
+    const key = `${serviceId}__${team.id}`
+    return (s.teamAssignments[key] || []).length
+  })
+
+  function handleSave() {
+    if (label.trim() && label.trim() !== team.label) updateTeam(team.id, serviceId, label.trim())
+    setEditing(false)
+  }
+
+  function handleDelete() {
+    if (window.confirm(`¿Eliminar sector "${team.label}"? Las camas quedarán sin equipo.`)) {
+      deleteTeam(team.id, serviceId)
+    }
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      {/* Cabecera del equipo */}
+      <div className="flex items-center gap-2 px-3 py-2.5 bg-white">
+        {editing ? (
+          <>
+            <input
+              value={label}
+              onChange={e => setLabel(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') { setLabel(team.label); setEditing(false) } }}
+              className="flex-1 text-sm px-2 py-1 border border-teal-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-300"
+              autoFocus
+            />
+            <Button size="sm" variant="primary" onClick={handleSave}><Check size={13} /></Button>
+            <Button size="sm" variant="ghost" onClick={() => { setLabel(team.label); setEditing(false) }}><X size={13} /></Button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setExpanded(v => !v)}
+              className="flex items-center gap-2 flex-1 text-left"
+            >
+              {expanded
+                ? <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                : <ChevronRight size={14} className="text-gray-400 shrink-0" />
+              }
+              <span className="text-sm font-medium text-gray-800">{team.label}</span>
+              <span className="text-xs text-gray-400 ml-1">
+                {bedCount} cama{bedCount !== 1 ? 's' : ''}
+              </span>
+            </button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(true)} title="Renombrar">
+              <Pencil size={13} className="text-gray-400" />
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleDelete} title="Eliminar sector"
+              className="text-red-400 hover:text-red-600 hover:bg-red-50">
+              <Trash2 size={13} />
+            </Button>
+          </>
+        )}
+      </div>
+
+      {/* Gestión de camas (expandible) */}
+      {expanded && (
+        <div className="border-t border-gray-100 p-3 bg-gray-50">
+          <TeamBedList serviceId={serviceId} team={team} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Panel por servicio ────────────────────────────────────────────────────────
 function ServicePanel({ service }) {
-  const [open, setOpen] = useState(true)   // expandido por defecto
-  const navigate = useNavigate()
-  const teams = TEAMS[service.id] || []
+  const [open,     setOpen]     = useState(true)
+  const [adding,   setAdding]   = useState(false)
+  const [newLabel, setNewLabel] = useState('')
+
+  const teams      = useVisiStore(s => s.teams[service.id] || [])
+  const createTeam = useVisiStore(s => s.createTeam)
+
+  function handleAdd(e) {
+    e.preventDefault()
+    if (!newLabel.trim()) return
+    createTeam(service.id, newLabel.trim())
+    setNewLabel('')
+    setAdding(false)
+  }
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Header del servicio */}
+      {/* Header servicio */}
       <div
         role="button"
         tabIndex={0}
         onClick={() => setOpen(o => !o)}
         onKeyDown={e => e.key === 'Enter' && setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer select-none"
+        className="flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer select-none"
       >
         <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: service.color }} />
-        <span className="flex-1 text-left font-semibold text-gray-900">{service.label}</span>
+        <span className="flex-1 font-semibold text-gray-900">{service.label}</span>
         <span className="text-xs text-gray-400 mr-2">
           {teams.length} sector{teams.length !== 1 ? 'es' : ''}
         </span>
-        <Button
-          size="sm"
-          variant="ghost-teal"
-          onClick={e => { e.stopPropagation(); navigate(`/service/${service.id}`) }}
-          title="Ver dashboard del servicio"
-        >
-          <LayoutDashboard size={14} />
-          <span className="hidden sm:inline">Dashboard</span>
-        </Button>
-        {open
-          ? <ChevronDown size={16} className="text-gray-400" />
-          : <ChevronRight size={16} className="text-gray-400" />
-        }
+        {open ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
       </div>
 
-      {/* Listado de sectores/equipos */}
+      {/* Lista de equipos */}
       {open && (
         <div className="border-t border-gray-100 px-5 py-4">
-          {teams.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">Sin sectores definidos para este servicio.</p>
+          <div className="flex flex-col gap-2">
+            {teams.length === 0 && !adding && (
+              <p className="text-sm text-gray-400 italic">Sin sectores. Agrega uno con el botón +.</p>
+            )}
+            {teams.map(team => (
+              <TeamRow key={team.id} team={team} serviceId={service.id} />
+            ))}
+          </div>
+
+          {/* Formulario agregar sector */}
+          {adding ? (
+            <form onSubmit={handleAdd} className="flex gap-2 mt-3">
+              <input
+                value={newLabel}
+                onChange={e => setNewLabel(e.target.value)}
+                placeholder="Nombre del sector (ej: Sector 6)"
+                className="flex-1 text-sm px-3 py-2 border border-teal-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-300"
+                autoFocus
+              />
+              <Button type="submit" variant="primary" size="sm" disabled={!newLabel.trim()}>
+                Crear
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => { setAdding(false); setNewLabel('') }}>
+                <X size={13} />
+              </Button>
+            </form>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {teams.map(team => (
-                <TeamBedList key={team.id} serviceId={service.id} team={team} />
-              ))}
-            </div>
+            <Button
+              variant="ghost-teal"
+              size="sm"
+              onClick={() => setAdding(true)}
+              className="mt-3"
+            >
+              <Plus size={14} /> Agregar sector
+            </Button>
           )}
         </div>
       )}
@@ -58,16 +162,16 @@ function ServicePanel({ service }) {
   )
 }
 
+// ── Página principal ──────────────────────────────────────────────────────────
 export default function Sectores() {
   return (
     <div className="py-6">
       <div className="mb-6">
         <h1 className="text-2xl font-display font-bold text-bay-blue">Gestión de Sectores</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Administra los sectores de cada servicio: crea camas, asigna pacientes y organiza los equipos.
+          Crea y administra los sectores de cada servicio. Expande un sector para gestionar sus camas.
         </p>
       </div>
-
       <div className="flex flex-col gap-4">
         {SERVICES.map(service => (
           <ServicePanel key={service.id} service={service} />
