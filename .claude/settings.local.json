@@ -12,7 +12,19 @@
       "Bash(Remove-Item -Recurse -Force \"C:\\\\Users\\\\Admn\\\\OneDrive\\\\SSMN\\\\SDGC\\\\app_claude\\\\VISIKAN\\\\node_modules\\\\.vite\" -ErrorAction SilentlyContinue)",
       "Bash(Write-Host \"Vite cache cleared\")",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(node -e \"const {BEDS}=require\\('./src/data/beds.js'\\); console.log\\('Total beds:', BEDS.length, '| Last ID:', BEDS[BEDS.length-1].id\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const content=fs.readFileSync\\('src/data/beds.js','utf8'\\); console.log\\(content.slice\\(-200\\)\\)\")",
+      "Bash(node -e \"import\\('./src/data/beds.js'\\).then\\(m => console.log\\('Total beds:', m.BEDS.length, '| Last:', m.BEDS[m.BEDS.length-1].id\\)\\).catch\\(e => console.error\\(e.message\\)\\)\")",
+      "Bash(npx vite *)",
+      "Bash(node -e ' *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__list_teams",
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__list_projects",
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__list_deployments",
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_project",
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_deployment_build_logs"
     ]
   }
 }

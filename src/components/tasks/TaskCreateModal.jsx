@@ -33,7 +33,7 @@ export default function TaskCreateModal({ patient, onClose }) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de tarea</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-2 gap-2">
             {TASK_TYPES.map(t => (
               <button
                 key={t.id}

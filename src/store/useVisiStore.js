@@ -1,26 +1,55 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { BEDS } from '../data/beds'
-
-function seedTeamAssignments(beds) {
-  const assignments = {}
-  beds.forEach(b => {
-    if (b.teamId) {
-      const key = `${b.serviceId}__${b.teamId}`
-      assignments[key] = [...(assignments[key] || []), b.id]
-    }
-  })
-  return assignments
-}
 
 const useVisiStore = create(
   persist(
     (set, get) => ({
-      // ── BEDS (static, never regenerated) ──────────────────────────────
-      beds: BEDS,
+      // ── BEDS (fully dynamic — created by users) ───────────────────────
+      // Bed shape: { id, label, serviceId }
+      // Team assignment is tracked in teamAssignments, not in the bed itself.
+      beds: [],
+
+      createBed({ label, serviceId, teamId }) {
+        set(state => {
+          const id = `bed-${Date.now()}`
+          const key = `${serviceId}__${teamId}`
+          return {
+            beds: [...state.beds, { id, label: label.trim(), serviceId }],
+            teamAssignments: {
+              ...state.teamAssignments,
+              [key]: [...(state.teamAssignments[key] || []), id],
+            },
+          }
+        })
+      },
+
+      deleteBed(bedId) {
+        set(state => {
+          // Find patients in this bed
+          const affectedPatients = Object.values(state.patients).filter(p => p.bedId === bedId)
+          const affectedPatientIds = new Set(affectedPatients.map(p => p.id))
+
+          // Remove bed from teamAssignments
+          const teamAssignments = {}
+          Object.entries(state.teamAssignments).forEach(([key, ids]) => {
+            teamAssignments[key] = ids.filter(id => id !== bedId)
+          })
+
+          return {
+            beds: state.beds.filter(b => b.id !== bedId),
+            teamAssignments,
+            patients: Object.fromEntries(
+              Object.entries(state.patients).filter(([id]) => !affectedPatientIds.has(id))
+            ),
+            tasks: Object.fromEntries(
+              Object.entries(state.tasks).filter(([, t]) => !affectedPatientIds.has(t.patientId))
+            ),
+          }
+        })
+      },
 
       // ── TEAM ASSIGNMENTS ──────────────────────────────────────────────
-      teamAssignments: seedTeamAssignments(BEDS),
+      teamAssignments: {},
 
       assignBedToTeam(bedId, serviceId, teamId) {
         set(state => {
@@ -59,12 +88,9 @@ const useVisiStore = create(
           const bed = state.beds.find(b => b.id === bedId)
           if (!bed) return state
 
-          // Resolve teamId: pre-set on bed (UCI/UTI) or looked up in teamAssignments
-          let teamId = bed.teamId
-          if (!teamId) {
-            const entry = Object.entries(state.teamAssignments).find(([, ids]) => ids.includes(bedId))
-            if (entry) teamId = entry[0].split('__')[1]
-          }
+          // Resolve teamId from teamAssignments
+          const entry = Object.entries(state.teamAssignments).find(([, ids]) => ids.includes(bedId))
+          const teamId = entry ? entry[0].split('__')[1] : null
 
           // Remove existing patient in this bed
           const filtered = Object.fromEntries(
@@ -80,18 +106,6 @@ const useVisiStore = create(
         })
       },
 
-      addHomeCarePatient(name, rut) {
-        set(state => {
-          const id = `pat-${Date.now()}`
-          return {
-            patients: {
-              ...state.patients,
-              [id]: { id, name, rut, bedId: null, serviceId: 'hosdom', teamId: 'hosdom_main', isHomeCare: true },
-            },
-          }
-        })
-      },
-
       removePatient(patientId) {
         set(state => {
           const { [patientId]: _, ...patients } = state.patients
@@ -102,7 +116,6 @@ const useVisiStore = create(
         })
       },
 
-      // Update the teamId on a patient when their bed's team assignment changes
       updatePatientTeam(patientId, teamId) {
         set(state => ({
           patients: {
@@ -197,7 +210,9 @@ const useVisiStore = create(
         }))
       },
     }),
-    { name: 'visikan-store' }
+    {
+      name: 'visikan-store-v2',   // nueva clave → limpia estado anterior
+    }
   )
 )
 

@@ -33,7 +33,7 @@ export default function PatientAssignModal({ bed, onClose }) {
   }
 
   return (
-    <Modal title={`Asignar paciente — ${bed.sala} ${bed.cama}`} onClose={onClose}>
+    <Modal title={`Asignar paciente — ${bed.label}`} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del paciente</label>
