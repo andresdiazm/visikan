@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AppShell from './components/layout/AppShell'
 import Landing from './pages/Landing'
+import Sectores from './pages/Sectores'
 import ServiceDashboard from './pages/ServiceDashboard'
 import TeamKanban from './pages/TeamKanban'
 
@@ -9,9 +10,10 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppShell />}>
-          <Route path="/" element={<Landing />} />
-          <Route path="/service/:serviceId" element={<ServiceDashboard />} />
-          <Route path="/service/:serviceId/team/:teamId" element={<TeamKanban />} />
+          <Route path="/"                                    element={<Landing />} />
+          <Route path="/sectores"                            element={<Sectores />} />
+          <Route path="/service/:serviceId"                  element={<ServiceDashboard />} />
+          <Route path="/service/:serviceId/team/:teamId"     element={<TeamKanban />} />
         </Route>
       </Routes>
     </BrowserRouter>
