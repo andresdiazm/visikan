@@ -60,7 +60,8 @@ function BedRow({ bed, serviceId, teamId, onAssignPatient }) {
 function AddBedPanel({ serviceId, teamId, onClose }) {
   const createBed = useVisiStore(s => s.createBed)
   const assignBedToTeam = useVisiStore(s => s.assignBedToTeam)
-  const [newLabel, setNewLabel] = useState('')
+  const [sala, setSala] = useState('')
+  const [cama, setCama] = useState('')
   const [tab, setTab] = useState('nueva') // 'nueva' | 'existente'
 
   // Camas del mismo servicio que no están asignadas a ningún equipo
@@ -71,11 +72,16 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
     [allServiceBeds, assignedIds]
   )
 
+  const canCreate = sala.trim() !== '' && cama.toString().trim() !== ''
+  // Label compuesto: "3-5" o "Norte-12"
+  const composedLabel = canCreate ? `${sala.trim()}-${cama.toString().trim()}` : ''
+
   function handleCreate(e) {
     e.preventDefault()
-    if (!newLabel.trim()) return
-    createBed({ label: newLabel.trim(), serviceId, teamId })
-    setNewLabel('')
+    if (!canCreate) return
+    createBed({ label: composedLabel, serviceId, teamId })
+    setSala('')
+    setCama('')
     onClose()
   }
 
@@ -106,21 +112,44 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
       </div>
 
       {tab === 'nueva' ? (
-        <form onSubmit={handleCreate} className="flex gap-2">
-          <input
-            type="text"
-            value={newLabel}
-            onChange={e => setNewLabel(e.target.value)}
-            placeholder="Ej: Cama 5, Box 3..."
-            className="flex-1 text-xs px-2 py-1.5 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
-            autoFocus
-          />
-          <Button size="sm" variant="primary" type="submit" disabled={!newLabel.trim()}>
-            Crear
-          </Button>
-          <Button size="sm" variant="ghost" type="button" onClick={onClose}>
-            <X size={13} />
-          </Button>
+        <form onSubmit={handleCreate} className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5 block">Sala</label>
+              <input
+                type="text"
+                value={sala}
+                onChange={e => setSala(e.target.value)}
+                placeholder="Ej: 3, A, Norte"
+                className="w-full text-xs px-2 py-1.5 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
+                autoFocus
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5 block">Cama</label>
+              <input
+                type="number"
+                min="1"
+                value={cama}
+                onChange={e => setCama(e.target.value)}
+                placeholder="Ej: 5"
+                className="w-full text-xs px-2 py-1.5 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
+              />
+            </div>
+          </div>
+          {composedLabel && (
+            <p className="text-[10px] text-gray-400">
+              Etiqueta: <span className="font-semibold text-gray-600">{composedLabel}</span>
+            </p>
+          )}
+          <div className="flex gap-2">
+            <Button size="sm" variant="primary" type="submit" disabled={!canCreate} className="flex-1">
+              Crear cama
+            </Button>
+            <Button size="sm" variant="ghost" type="button" onClick={onClose}>
+              <X size={13} />
+            </Button>
+          </div>
         </form>
       ) : (
         <div className="flex gap-2">
