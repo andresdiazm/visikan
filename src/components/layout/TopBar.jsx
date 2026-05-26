@@ -1,9 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Activity, BedDouble, LayoutGrid } from 'lucide-react'
+import { Activity, BedDouble, LayoutGrid, LogOut } from 'lucide-react'
 
 const NAV = [
   { label: 'Inicio',   href: '/',         icon: LayoutGrid },
   { label: 'Sectores', href: '/sectores',  icon: BedDouble  },
+  { label: 'Altas',    href: '/altas',     icon: LogOut     },
 ]
 
 export default function TopBar() {

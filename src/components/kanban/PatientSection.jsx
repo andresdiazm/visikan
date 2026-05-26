@@ -14,8 +14,8 @@ const PatientSection = memo(function PatientSection({ patient, tasks }) {
   const subLabel = bedLabel ? patient.name : null
 
   return (
-    <div className="mb-3">
-      <div className="flex items-center gap-1.5 mb-1.5">
+    <div className="mb-2">
+      <div className="flex items-center gap-1.5 mb-1">
         {patient.isHomeCare
           ? <Home size={12} className="text-purple-400 shrink-0" />
           : <BedDouble size={12} className="text-gray-400 shrink-0" />
@@ -33,7 +33,7 @@ const PatientSection = memo(function PatientSection({ patient, tasks }) {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2 pl-4">
+      <div className="flex flex-col gap-1.5 pl-3">
         {tasks.map(task => <TaskCard key={task.id} task={task} />)}
       </div>
 
