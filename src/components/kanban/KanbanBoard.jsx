@@ -62,9 +62,16 @@ export default function KanbanBoard({ teamId }) {
   const allTasks = useVisiStore(s =>
     Object.values(s.tasks).filter(t => t.teamId === teamId)
   )
-  const patients = useVisiStore(s =>
-    Object.values(s.patients).filter(p => p.teamId === teamId)
-  )
+  const patients = useVisiStore(s => {
+    const beds = s.beds
+    return Object.values(s.patients)
+      .filter(p => p.teamId === teamId)
+      .sort((a, b) => {
+        const labelA = (a.bedId ? beds.find(b => b.id === a.bedId)?.label : null) ?? a.name
+        const labelB = (b.bedId ? beds.find(b => b.id === b.bedId)?.label : null) ?? b.name
+        return labelA.localeCompare(labelB, 'es', { numeric: true, sensitivity: 'base' })
+      })
+  })
   const labels   = useVisiStore(s => s.labels)
   const moveTask = useVisiStore(s => s.moveTask)
 
