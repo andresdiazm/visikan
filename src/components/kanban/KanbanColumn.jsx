@@ -4,7 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import PatientSection from './PatientSection'
 import { STATUS_META } from '../../data/hierarchy'
 
-export default function KanbanColumn({ status, tasks, patients }) {
+export default function KanbanColumn({ status, tasks, patients, filtered = false }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const meta = STATUS_META[status]
 
@@ -18,7 +18,9 @@ export default function KanbanColumn({ status, tasks, patients }) {
         patient: p,
         tasks: tasks.filter(t => t.patientId === p.id),
       }))
-      .filter(({ tasks: t }) => status === 'iniciada' ? true : t.length > 0)
+      // Con filtro activo: solo mostrar pacientes con tareas (aunque sea "iniciada")
+      // Sin filtro: "iniciada" muestra todos los pacientes para crear su primera tarea
+      .filter(({ tasks: t }) => (status === 'iniciada' && !filtered) ? true : t.length > 0)
   }, [patients, tasks, status])
 
   return (

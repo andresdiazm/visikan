@@ -10,19 +10,62 @@ import {
 } from '@dnd-kit/core'
 import KanbanColumn from './KanbanColumn'
 import { TaskCardContent } from './TaskCard'
-import { TASK_STATUSES } from '../../data/hierarchy'
+import { TASK_STATUSES, TASK_TYPES } from '../../data/hierarchy'
 import useVisiStore from '../../store/useVisiStore'
 
 const COLUMN_IDS = new Set(TASK_STATUSES)
 
+// ── Filtro por tipo ───────────────────────────────────────────────────────────
+function TypeFilter({ selected, onChange }) {
+  function toggle(id) {
+    const next = new Set(selected)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    onChange(next)
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap mb-3">
+      <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wide shrink-0">Filtrar:</span>
+      {TASK_TYPES.map(t => {
+        const active = selected.has(t.id)
+        return (
+          <button
+            key={t.id}
+            onClick={() => toggle(t.id)}
+            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
+              active
+                ? `${t.color} border-transparent shadow-sm`
+                : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600'
+            }`}
+          >
+            {t.label}
+          </button>
+        )
+      })}
+      {selected.size > 0 && (
+        <button
+          onClick={() => onChange(new Set())}
+          className="text-[11px] text-gray-400 hover:text-gray-600 underline ml-1"
+        >
+          Limpiar
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ── Board ─────────────────────────────────────────────────────────────────────
 export default function KanbanBoard({ teamId }) {
-  const tasks = useVisiStore(s =>
+  const [selectedTypes, setSelectedTypes] = useState(new Set())
+
+  const allTasks = useVisiStore(s =>
     Object.values(s.tasks).filter(t => t.teamId === teamId)
   )
   const patients = useVisiStore(s =>
     Object.values(s.patients).filter(p => p.teamId === teamId)
   )
-  const labels = useVisiStore(s => s.labels)
+  const labels   = useVisiStore(s => s.labels)
   const moveTask = useVisiStore(s => s.moveTask)
 
   const [activeTask, setActiveTask] = useState(null)
@@ -30,6 +73,14 @@ export default function KanbanBoard({ teamId }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+  )
+
+  // Aplicar filtro de tipos (si hay alguno seleccionado)
+  const tasks = useMemo(() =>
+    selectedTypes.size === 0
+      ? allTasks
+      : allTasks.filter(t => selectedTypes.has(t.type)),
+    [allTasks, selectedTypes]
   )
 
   const tasksByStatus = useMemo(() => {
@@ -46,9 +97,9 @@ export default function KanbanBoard({ teamId }) {
 
   const tasksById = useMemo(() => {
     const map = {}
-    tasks.forEach(t => { map[t.id] = t })
+    allTasks.forEach(t => { map[t.id] = t })
     return map
-  }, [tasks])
+  }, [allTasks])
 
   function handleDragStart({ active }) {
     setActiveTask(tasksById[active.id] || null)
@@ -57,17 +108,14 @@ export default function KanbanBoard({ teamId }) {
   function handleDragEnd({ active, over }) {
     setActiveTask(null)
     if (!over) return
-
     let targetStatus
     if (COLUMN_IDS.has(over.id)) {
       targetStatus = over.id
     } else {
-      const overTask = tasksById[over.id]
-      targetStatus = overTask?.status
+      targetStatus = tasksById[over.id]?.status
     }
-
-    const activeTask = tasksById[active.id]
-    if (targetStatus && activeTask && activeTask.status !== targetStatus) {
+    const active_ = tasksById[active.id]
+    if (targetStatus && active_ && active_.status !== targetStatus) {
       moveTask(active.id, targetStatus)
     }
   }
@@ -79,13 +127,16 @@ export default function KanbanBoard({ teamId }) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-200px)]">
+      <TypeFilter selected={selectedTypes} onChange={setSelectedTypes} />
+
+      <div className="flex gap-3 overflow-x-auto pb-4 min-h-[calc(100vh-220px)]">
         {TASK_STATUSES.map(status => (
           <KanbanColumn
             key={status}
             status={status}
             tasks={tasksByStatus[status]}
             patients={patients}
+            filtered={selectedTypes.size > 0}
           />
         ))}
       </div>
@@ -93,7 +144,7 @@ export default function KanbanBoard({ teamId }) {
       <DragOverlay>
         {activeTask && (
           <div className="rotate-1 shadow-xl opacity-95">
-            <TaskCardContent task={activeTask} labels={labels} onDelete={() => {}} />
+            <TaskCardContent task={activeTask} labels={labels} />
           </div>
         )}
       </DragOverlay>
