@@ -28,7 +28,10 @@
       "Bash(node -e \"require\\('@supabase/supabase-js'\\); console.log\\('ok'\\)\")",
       "Bash(where vercel *)",
       "Bash(vercel --version)",
-      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_runtime_logs"
+      "mcp__b7b1a70a-c2e1-462d-a0b6-d2ce985a9471__get_runtime_logs",
+      "Bash(npx vercel *)",
+      "Bash(del .env.vercel.tmp)",
+      "Bash(git commit *)"
     ]
   }
 }

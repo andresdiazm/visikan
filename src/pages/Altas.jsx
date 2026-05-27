@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Clock, BedDouble, Home, ArrowRight } from 'lucide-react'
 import useVisiStore from '../store/useVisiStore'
 import { SERVICES } from '../data/hierarchy'
+import { parseNotesMeta, formatFechaAlta } from '../lib/taskMeta'
 
 function timeAgo(isoString) {
   if (!isoString) return ''
@@ -29,6 +30,8 @@ const EGRESO_TYPES = [
 function TaskRow({ task, patient, bed, teamLabel, service }) {
   const navigate = useNavigate()
   const old = isOlderThan24h(task.createdAt)
+  const { destino, fechaAlta } = parseNotesMeta(task.notes)
+  const destinoLabel = destino ? SERVICES.find(s => s.id === destino)?.label ?? destino : null
 
   return (
     <div className={`flex items-center gap-2 px-3 py-1.5 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors ${old ? 'bg-orange-50 hover:bg-orange-100' : ''}`}>
@@ -52,8 +55,22 @@ function TaskRow({ task, patient, bed, teamLabel, service }) {
         <p className="text-[10px] text-gray-400 truncate">{teamLabel ?? '—'}</p>
       </div>
 
-      {/* Descripción */}
-      <p className="flex-1 text-xs text-gray-600 truncate">{task.description || '—'}</p>
+      {/* Descripción + meta */}
+      <div className="flex-1 min-w-0">
+        {/* Destino para traslados */}
+        {task.type === 'solicitud_traslado' && destinoLabel && (
+          <p className="text-[10px] font-semibold text-rose-600 truncate mb-0.5">
+            → {destinoLabel}
+          </p>
+        )}
+        {/* Fecha alta probable */}
+        {task.type === 'alta_probable' && fechaAlta && (
+          <p className="text-[10px] font-semibold text-lime-700 truncate mb-0.5">
+            Alta est.: {formatFechaAlta(fechaAlta)}
+          </p>
+        )}
+        <p className="text-xs text-gray-600 truncate">{task.description || '—'}</p>
+      </div>
 
       {/* Timestamp */}
       <div className={`flex items-center gap-0.5 shrink-0 ${old ? 'text-orange-500' : 'text-gray-400'}`}>

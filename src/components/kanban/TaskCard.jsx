@@ -5,7 +5,8 @@ import { Trash2, AlertCircle, Pencil, ChevronRight, ChevronLeft, FileText, Clock
 import { TypeBadge } from '../ui/Badge'
 import TaskEditModal from '../tasks/TaskEditModal'
 import useVisiStore from '../../store/useVisiStore'
-import { TASK_STATUSES } from '../../data/hierarchy'
+import { TASK_STATUSES, SERVICES } from '../../data/hierarchy'
+import { parseNotesMeta, formatFechaAlta } from '../../lib/taskMeta'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(isoString) {
@@ -32,6 +33,10 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
   const nextStatus = currentIdx < TASK_STATUSES.length - 1 ? TASK_STATUSES[currentIdx + 1] : null
   const statusLabel = { iniciada: 'Iniciada', en_proceso: 'En Proceso', terminada: 'Terminada' }
   const old = isOlderThan24h(task.createdAt, task.status)
+
+  // Metadatos estructurados en notes
+  const { destino, fechaAlta, userNotes } = parseNotesMeta(task.notes)
+  const destinoLabel = destino ? SERVICES.find(s => s.id === destino)?.label ?? destino : null
 
   return (
     <div className={`rounded-lg border shadow-sm px-2 py-1.5 group cursor-grab active:cursor-grabbing select-none transition-colors ${
@@ -89,11 +94,29 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
       {/* Descripción */}
       <p className="text-xs text-gray-700 line-clamp-1 leading-tight mb-1">{task.description}</p>
 
-      {/* Notas (solo si existen) */}
-      {task.notes && (
+      {/* Destino (traslado) */}
+      {task.type === 'solicitud_traslado' && destinoLabel && (
+        <div className="flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5">
+            → {destinoLabel}
+          </span>
+        </div>
+      )}
+
+      {/* Fecha alta probable */}
+      {task.type === 'alta_probable' && fechaAlta && (
+        <div className="flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-semibold text-lime-700 bg-lime-50 border border-lime-200 rounded px-1.5 py-0.5">
+            Alta: {formatFechaAlta(fechaAlta)}
+          </span>
+        </div>
+      )}
+
+      {/* Notas del usuario (solo si existen, sin las líneas de meta) */}
+      {userNotes && (
         <div className="flex items-center gap-1 mb-1 bg-amber-50 rounded px-1.5 py-0.5">
           <FileText size={9} className="text-amber-400 shrink-0" />
-          <p className="text-[10px] text-amber-700 line-clamp-1">{task.notes}</p>
+          <p className="text-[10px] text-amber-700 line-clamp-1">{userNotes}</p>
         </div>
       )}
 

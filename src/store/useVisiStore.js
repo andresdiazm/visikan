@@ -139,14 +139,26 @@ const useVisiStore = create((set, get) => ({
     const lbl  = label.trim()
     const key  = `${serviceId}__${teamId}`
 
-    // Optimista
+    // Actualización optimista
     set(s => ({
       beds: [...s.beds, { id, label: lbl, serviceId }],
       teamAssignments: { ...s.teamAssignments, [key]: [...(s.teamAssignments[key] || []), id] },
     }))
 
-    await supabase.from('beds').insert({ id, label: lbl, service_id: serviceId })
-    await supabase.from('team_assignments').insert({ bed_id: id, service_id: serviceId, team_id: teamId })
+    const { error: bedErr } = await supabase.from('beds').insert({ id, label: lbl, service_id: serviceId })
+    if (bedErr) {
+      console.error('[VISIKAN] createBed error:', bedErr.message)
+      // Revertir actualización optimista
+      set(s => ({
+        beds: s.beds.filter(b => b.id !== id),
+        teamAssignments: { ...s.teamAssignments, [key]: (s.teamAssignments[key] || []).filter(i => i !== id) },
+      }))
+      return
+    }
+    const { error: assignErr } = await supabase.from('team_assignments').insert({ bed_id: id, service_id: serviceId, team_id: teamId })
+    if (assignErr) {
+      console.error('[VISIKAN] createBed assignment error:', assignErr.message)
+    }
   },
 
   async deleteBed(bedId) {
