@@ -1,11 +1,15 @@
 import { TASK_TYPES } from '../../data/hierarchy'
 
-export function TypeBadge({ type }) {
-  const taskType = TASK_TYPES.find(t => t.id === type)
+// Incluye todos los tipos (incluso hidden) para mostrar badges de tareas legacy
+const ALL_TYPES_MAP = Object.fromEntries(TASK_TYPES.map(t => [t.id, t]))
+
+export function TypeBadge({ type, subLabel }) {
+  const taskType = ALL_TYPES_MAP[type]
   if (!taskType) return null
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${taskType.color}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${taskType.color}`}>
       {taskType.label}
+      {subLabel && <span className="opacity-70">· {subLabel}</span>}
     </span>
   )
 }

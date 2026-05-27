@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { TASK_TYPES, SERVICES } from '../../data/hierarchy'
+import { TASK_TYPES, SERVICES, PRESTACION_TIPOS } from '../../data/hierarchy'
 import { parseNotesMeta, buildNotesMeta } from '../../lib/taskMeta'
 import useVisiStore from '../../store/useVisiStore'
 
@@ -10,31 +10,41 @@ export default function TaskEditModal({ task, onClose }) {
   const labels     = useVisiStore(s => s.labels)
 
   // Parsear metadatos existentes en notes
-  const { destino: initDestino, fechaAlta: initFechaAlta, socialEstado: initSocial, userNotes: initNotes } =
+  const { destino: initDestino, fechaAlta: initFechaAlta, socialEstado: initSocial,
+          prestacionTipo: initPrestacion, userNotes: initNotes } =
     parseNotesMeta(task.notes)
 
-  const [type,           setType]           = useState(task.type)
+  // Para tipos legacy (examenes, imagenes, procedimiento) derivar subtipo del tipo
+  const derivedPrestacion = initPrestacion ||
+    (['examenes','imagenes','procedimiento'].includes(task.type) ? task.type : '')
+
+  const [type,           setType]           = useState(
+    ['examenes','imagenes','procedimiento'].includes(task.type) ? 'solicitud_prestacion' : task.type
+  )
   const [description,    setDescription]    = useState(task.description)
   const [notes,          setNotes]          = useState(initNotes)
   const [priority,       setPriority]       = useState(task.priority || 'normal')
   const [selectedLabels, setSelectedLabels] = useState(task.labels || [])
 
-  const [destino,      setDestino]      = useState(initDestino)
-  const [fechaAlta,    setFechaAlta]    = useState(initFechaAlta)
-  const [socialEstado, setSocialEstado] = useState(initSocial)
+  const [destino,        setDestino]        = useState(initDestino)
+  const [fechaAlta,      setFechaAlta]      = useState(initFechaAlta)
+  const [socialEstado,   setSocialEstado]   = useState(initSocial)
+  const [prestacionTipo, setPrestacionTipo] = useState(derivedPrestacion)
 
   function handleTypeChange(newType) {
     if (newType !== type) {
       setDestino('')
       setFechaAlta('')
       setSocialEstado('')
+      setPrestacionTipo('')
     }
     setType(newType)
   }
 
   const canSubmit = description.trim() &&
-    (type !== 'solicitud_traslado' || destino) &&
-    (type !== 'trabajo_social'     || socialEstado)
+    (type !== 'solicitud_traslado'  || destino) &&
+    (type !== 'trabajo_social'      || socialEstado) &&
+    (type !== 'solicitud_prestacion'|| prestacionTipo)
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -45,7 +55,7 @@ export default function TaskEditModal({ task, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo)
     updateTask(task.id, {
       type,
       description: description.trim(),
@@ -64,7 +74,7 @@ export default function TaskEditModal({ task, onClose }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de tarea</label>
           <div className="grid grid-cols-3 sm:grid-cols-2 gap-2">
-            {TASK_TYPES.map(t => (
+            {TASK_TYPES.filter(t => !t.hidden).map(t => (
               <button
                 key={t.id}
                 type="button"
@@ -80,6 +90,31 @@ export default function TaskEditModal({ task, onClose }) {
             ))}
           </div>
         </div>
+
+        {/* ── Subtipo de prestación ────────────────────────────────────── */}
+        {type === 'solicitud_prestacion' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de prestación <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-2">
+              {PRESTACION_TIPOS.map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setPrestacionTipo(opt.id)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    prestacionTipo === opt.id
+                      ? `${opt.color} border-transparent`
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Estado social (solo trabajo_social) ──────────────────────── */}
         {type === 'trabajo_social' && (

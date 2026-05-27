@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { TASK_TYPES, SERVICES } from '../../data/hierarchy'
+import { TASK_TYPES, SERVICES, PRESTACION_TIPOS } from '../../data/hierarchy'
 import { buildNotesMeta } from '../../lib/taskMeta'
 import useVisiStore from '../../store/useVisiStore'
 
@@ -16,20 +16,23 @@ export default function TaskCreateModal({ patient, onClose }) {
   const [selectedLabels, setSelectedLabels] = useState([])
 
   // Campos extra según tipo
-  const [destino,      setDestino]      = useState('')   // solicitud_traslado
-  const [fechaAlta,    setFechaAlta]    = useState('')   // alta_probable
-  const [socialEstado, setSocialEstado] = useState('')   // trabajo_social
+  const [destino,        setDestino]        = useState('')   // solicitud_traslado
+  const [fechaAlta,      setFechaAlta]      = useState('')   // alta_probable
+  const [socialEstado,   setSocialEstado]   = useState('')   // trabajo_social
+  const [prestacionTipo, setPrestacionTipo] = useState('')   // solicitud_prestacion
 
   // Resetear campos extra al cambiar tipo
   useEffect(() => {
     setDestino('')
     setFechaAlta('')
     setSocialEstado('')
+    setPrestacionTipo('')
   }, [type])
 
   const canSubmit = description.trim() &&
-    (type !== 'solicitud_traslado' || destino) &&
-    (type !== 'trabajo_social'     || socialEstado)
+    (type !== 'solicitud_traslado'  || destino) &&
+    (type !== 'trabajo_social'      || socialEstado) &&
+    (type !== 'solicitud_prestacion'|| prestacionTipo)
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -40,7 +43,7 @@ export default function TaskCreateModal({ patient, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo)
     createTask({
       patientId: patient.id,
       type,
@@ -60,7 +63,7 @@ export default function TaskCreateModal({ patient, onClose }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de tarea</label>
           <div className="grid grid-cols-3 sm:grid-cols-2 gap-2">
-            {TASK_TYPES.map(t => (
+            {TASK_TYPES.filter(t => !t.hidden).map(t => (
               <button
                 key={t.id}
                 type="button"
@@ -76,6 +79,31 @@ export default function TaskCreateModal({ patient, onClose }) {
             ))}
           </div>
         </div>
+
+        {/* ── Subtipo de prestación ────────────────────────────────────── */}
+        {type === 'solicitud_prestacion' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de prestación <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-2">
+              {PRESTACION_TIPOS.map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setPrestacionTipo(opt.id)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    prestacionTipo === opt.id
+                      ? `${opt.color} border-transparent`
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Estado social (solo trabajo_social) ──────────────────────── */}
         {type === 'trabajo_social' && (

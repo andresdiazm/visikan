@@ -4,40 +4,36 @@
 
 /**
  * Extrae metadatos y notas limpias desde el string raw de notes.
- * @returns {{ destino, fechaAlta, socialEstado, userNotes }}
+ * @returns {{ destino, fechaAlta, socialEstado, prestacionTipo, userNotes }}
  */
 export function parseNotesMeta(notes = '') {
-  let destino = '', fechaAlta = '', socialEstado = ''
+  let destino = '', fechaAlta = '', socialEstado = '', prestacionTipo = ''
   const kept = []
   for (const line of (notes || '').split('\n')) {
-    if      (line.startsWith('#destino:'))       destino      = line.slice('#destino:'.length)
-    else if (line.startsWith('#fecha_alta:'))    fechaAlta    = line.slice('#fecha_alta:'.length)
-    else if (line.startsWith('#social_estado:')) socialEstado = line.slice('#social_estado:'.length)
+    if      (line.startsWith('#destino:'))       destino       = line.slice('#destino:'.length)
+    else if (line.startsWith('#fecha_alta:'))    fechaAlta     = line.slice('#fecha_alta:'.length)
+    else if (line.startsWith('#social_estado:')) socialEstado  = line.slice('#social_estado:'.length)
+    else if (line.startsWith('#prestacion:'))    prestacionTipo = line.slice('#prestacion:'.length)
     else kept.push(line)
   }
-  return { destino, fechaAlta, socialEstado, userNotes: kept.join('\n').replace(/^\n+|\n+$/g, '') }
+  return { destino, fechaAlta, socialEstado, prestacionTipo, userNotes: kept.join('\n').replace(/^\n+|\n+$/g, '') }
 }
 
 /**
  * Combina metadatos + notas del usuario en el string que se guarda en DB.
- * @param {string} destino        – serviceId destino (solicitud_traslado)
- * @param {string} fechaAlta      – YYYY-MM-DD (alta_probable)
- * @param {string} userNotes      – texto libre del usuario
- * @param {string} socialEstado   – 'con_alta' | 'sin_alta' (trabajo_social)
  */
-export function buildNotesMeta(destino = '', fechaAlta = '', userNotes = '', socialEstado = '') {
+export function buildNotesMeta(destino = '', fechaAlta = '', userNotes = '', socialEstado = '', prestacionTipo = '') {
   const parts = []
-  if (destino)      parts.push(`#destino:${destino}`)
-  if (fechaAlta)    parts.push(`#fecha_alta:${fechaAlta}`)
-  if (socialEstado) parts.push(`#social_estado:${socialEstado}`)
+  if (destino)        parts.push(`#destino:${destino}`)
+  if (fechaAlta)      parts.push(`#fecha_alta:${fechaAlta}`)
+  if (socialEstado)   parts.push(`#social_estado:${socialEstado}`)
+  if (prestacionTipo) parts.push(`#prestacion:${prestacionTipo}`)
   const clean = (userNotes || '').trim()
   if (clean) parts.push(clean)
   return parts.join('\n')
 }
 
-/**
- * Formatea una fecha ISO "YYYY-MM-DD" como "DD/MM/YYYY".
- */
+/** Formatea fecha ISO "YYYY-MM-DD" → "DD/MM/YYYY" */
 export function formatFechaAlta(isoDate) {
   if (!isoDate) return ''
   const [y, m, d] = isoDate.split('-')
@@ -49,3 +45,22 @@ export const SOCIAL_ESTADO_META = {
   con_alta: { label: 'Con alta médica',  color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   sin_alta: { label: 'Sin alta médica',  color: 'bg-amber-100 text-amber-800 border-amber-200' },
 }
+
+/**
+ * Devuelve el subtipo de prestación de una tarea (para tipos legacy y nuevo).
+ * @param {{ type: string, notes: string }} task
+ * @returns {string}  'examenes' | 'imagenes' | 'procedimiento' | ''
+ */
+export function getPrestacionTipo(task) {
+  if (task.type === 'solicitud_prestacion') {
+    return parseNotesMeta(task.notes).prestacionTipo || ''
+  }
+  // Tipos legacy mapean directo
+  if (task.type === 'examenes')    return 'examenes'
+  if (task.type === 'imagenes')    return 'imagenes'
+  if (task.type === 'procedimiento') return 'procedimiento'
+  return ''
+}
+
+/** IDs que componen el universo de "prestaciones" (nuevo + legacy) */
+export const PRESTACION_TYPE_IDS = new Set(['solicitud_prestacion', 'examenes', 'imagenes', 'procedimiento'])

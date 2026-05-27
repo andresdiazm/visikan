@@ -37,17 +37,26 @@ export const TEAMS = {
 }
 
 export const TASK_TYPES = [
-  { id: 'alta',                 label: 'Alta',                    color: 'bg-emerald-100 text-emerald-800' },
-  { id: 'alta_probable',        label: 'Alta Probable',           color: 'bg-lime-100 text-lime-800' },
-  { id: 'coordinacion_externa', label: 'Coordinación Externa',    color: 'bg-indigo-100 text-indigo-800' },
-  { id: 'interequipo',          label: 'Interconsulta',           color: 'bg-yellow-100 text-yellow-800' },
-  { id: 'otro',                 label: 'Otro',                    color: 'bg-gray-100 text-gray-800' },
-  { id: 'pabellon',             label: 'Pabellón',                color: 'bg-green-100 text-green-800' },
-  { id: 'trabajo_social',       label: 'Social',                  color: 'bg-orange-100 text-orange-800' },
-  { id: 'examenes',             label: 'Solicitud Exámenes',      color: 'bg-blue-100 text-blue-800' },
-  { id: 'imagenes',             label: 'Solicitud Imágenes',      color: 'bg-purple-100 text-purple-800' },
-  { id: 'procedimiento',        label: 'Solicitud Procedimiento', color: 'bg-cyan-100 text-cyan-800' },
-  { id: 'solicitud_traslado',   label: 'Solicitud Traslado',      color: 'bg-rose-100 text-rose-800' },
+  { id: 'alta',                  label: 'Alta',                     color: 'bg-emerald-100 text-emerald-800' },
+  { id: 'alta_probable',         label: 'Alta Probable',            color: 'bg-lime-100 text-lime-800' },
+  { id: 'coordinacion_externa',  label: 'Coordinación Externa',     color: 'bg-indigo-100 text-indigo-800' },
+  { id: 'interequipo',           label: 'Interconsulta',            color: 'bg-yellow-100 text-yellow-800' },
+  { id: 'otro',                  label: 'Otro',                     color: 'bg-gray-100 text-gray-800' },
+  { id: 'pabellon',              label: 'Pabellón',                 color: 'bg-green-100 text-green-800' },
+  { id: 'solicitud_prestacion',  label: 'Solicitud de Prestación',  color: 'bg-sky-100 text-sky-800' },
+  { id: 'solicitud_traslado',    label: 'Solicitud Traslado',       color: 'bg-rose-100 text-rose-800' },
+  { id: 'trabajo_social',        label: 'Social',                   color: 'bg-orange-100 text-orange-800' },
+  // Tipos legacy — se muestran en badges pero no aparecen al crear/editar
+  { id: 'examenes',              label: 'Solicitud Exámenes',       color: 'bg-blue-100 text-blue-800',   hidden: true },
+  { id: 'imagenes',              label: 'Solicitud Imágenes',       color: 'bg-purple-100 text-purple-800', hidden: true },
+  { id: 'procedimiento',         label: 'Solicitud Procedimiento',  color: 'bg-cyan-100 text-cyan-800',   hidden: true },
+]
+
+/** Subtipos de Solicitud de Prestación */
+export const PRESTACION_TIPOS = [
+  { id: 'examenes',      label: 'Exámenes',      color: 'bg-blue-100 text-blue-800',   dot: 'bg-blue-500'   },
+  { id: 'imagenes',      label: 'Imágenes',      color: 'bg-purple-100 text-purple-800', dot: 'bg-purple-500' },
+  { id: 'procedimiento', label: 'Procedimientos', color: 'bg-cyan-100 text-cyan-800',   dot: 'bg-cyan-500'   },
 ]
 
 export const TASK_STATUSES = ['iniciada', 'en_proceso', 'terminada']

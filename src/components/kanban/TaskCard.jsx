@@ -6,7 +6,8 @@ import { TypeBadge } from '../ui/Badge'
 import TaskEditModal from '../tasks/TaskEditModal'
 import useVisiStore from '../../store/useVisiStore'
 import { TASK_STATUSES, SERVICES } from '../../data/hierarchy'
-import { parseNotesMeta, formatFechaAlta, SOCIAL_ESTADO_META } from '../../lib/taskMeta'
+import { parseNotesMeta, formatFechaAlta, SOCIAL_ESTADO_META, getPrestacionTipo } from '../../lib/taskMeta'
+import { PRESTACION_TIPOS } from '../../data/hierarchy'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(isoString) {
@@ -36,8 +37,10 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
 
   // Metadatos estructurados en notes
   const { destino, fechaAlta, socialEstado, userNotes } = parseNotesMeta(task.notes)
-  const destinoLabel = destino ? SERVICES.find(s => s.id === destino)?.label ?? destino : null
-  const socialMeta   = socialEstado ? SOCIAL_ESTADO_META[socialEstado] : null
+  const destinoLabel    = destino ? SERVICES.find(s => s.id === destino)?.label ?? destino : null
+  const socialMeta      = socialEstado ? SOCIAL_ESTADO_META[socialEstado] : null
+  const prestacionTipo  = getPrestacionTipo(task)
+  const prestacionMeta  = prestacionTipo ? PRESTACION_TIPOS.find(p => p.id === prestacionTipo) : null
 
   return (
     <div className={`rounded-lg border shadow-sm px-2 py-1.5 group cursor-grab active:cursor-grabbing select-none transition-colors ${
@@ -46,7 +49,7 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
 
       {/* Fila única: badge + urgente + labels (puntos) + acciones */}
       <div className="flex items-center gap-1 mb-1">
-        <TypeBadge type={task.type} />
+        <TypeBadge type={task.type} subLabel={prestacionMeta?.label} />
         {task.priority === 'urgente' && (
           <AlertCircle size={11} className="text-red-500 shrink-0" />
         )}
