@@ -211,7 +211,7 @@ const useVisiStore = create((set, get) => ({
     const teamId = entry ? entry[0].split('__')[1] : null
     const existing = Object.values(s.patients).find(p => p.bedId === bedId)
 
-    const id = `pat-${Date.now()}`
+    const id = crypto.randomUUID()
     const newPat = { id, name, rut, bedId, serviceId: bed.serviceId, teamId, isHomeCare: false }
 
     set(s => ({
@@ -237,7 +237,7 @@ const useVisiStore = create((set, get) => ({
   async createTask({ patientId, type, description, priority, labels, notes }) {
     const patient = get().patients[patientId]
     if (!patient) return
-    const id = `task-${Date.now()}`
+    const id = crypto.randomUUID()
     const task = {
       id, patientId, teamId: patient.teamId, serviceId: patient.serviceId,
       type, description, priority: priority || 'normal',
@@ -284,7 +284,7 @@ const useVisiStore = create((set, get) => ({
 
   // ── ETIQUETAS ───────────────────────────────────────────────────────────────
   async createLabel(name, color) {
-    const id = `lbl-${Date.now()}`
+    const id = crypto.randomUUID()
     set(s => ({ labels: [...s.labels, { id, name, color }] }))
     await supabase.from('labels').insert({ id, name, color })
   },
