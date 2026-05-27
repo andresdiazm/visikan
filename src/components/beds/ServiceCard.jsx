@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronDown, ChevronRight, LayoutDashboard } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import TeamBedList from './TeamBedList'
+import ServiceSummary from './ServiceSummary'
 import Button from '../ui/Button'
 import { TEAMS } from '../../data/hierarchy'
 
@@ -41,17 +42,20 @@ export default function ServiceCard({ service }) {
       </div>
 
       {open && (
-        <div className="border-t border-gray-100 px-5 py-4">
-          {teams.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">Sin equipos definidos</p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {teams.map(team => (
-                <TeamBedList key={team.id} serviceId={service.id} team={team} />
-              ))}
-            </div>
-          )}
-        </div>
+        <>
+          <div className="border-t border-gray-100 px-5 py-4">
+            {teams.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">Sin equipos definidos</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {teams.map(team => (
+                  <TeamBedList key={team.id} serviceId={service.id} team={team} />
+                ))}
+              </div>
+            )}
+          </div>
+          <ServiceSummary serviceId={service.id} />
+        </>
       )}
     </div>
   )
