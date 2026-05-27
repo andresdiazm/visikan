@@ -10,7 +10,7 @@ export default function TaskEditModal({ task, onClose }) {
   const labels     = useVisiStore(s => s.labels)
 
   // Parsear metadatos existentes en notes
-  const { destino: initDestino, fechaAlta: initFechaAlta, userNotes: initNotes } =
+  const { destino: initDestino, fechaAlta: initFechaAlta, socialEstado: initSocial, userNotes: initNotes } =
     parseNotesMeta(task.notes)
 
   const [type,           setType]           = useState(task.type)
@@ -19,19 +19,22 @@ export default function TaskEditModal({ task, onClose }) {
   const [priority,       setPriority]       = useState(task.priority || 'normal')
   const [selectedLabels, setSelectedLabels] = useState(task.labels || [])
 
-  const [destino,   setDestino]   = useState(initDestino)
-  const [fechaAlta, setFechaAlta] = useState(initFechaAlta)
+  const [destino,      setDestino]      = useState(initDestino)
+  const [fechaAlta,    setFechaAlta]    = useState(initFechaAlta)
+  const [socialEstado, setSocialEstado] = useState(initSocial)
 
   function handleTypeChange(newType) {
     if (newType !== type) {
       setDestino('')
       setFechaAlta('')
+      setSocialEstado('')
     }
     setType(newType)
   }
 
   const canSubmit = description.trim() &&
-    (type !== 'solicitud_traslado' || destino)
+    (type !== 'solicitud_traslado' || destino) &&
+    (type !== 'trabajo_social'     || socialEstado)
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -42,7 +45,7 @@ export default function TaskEditModal({ task, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado)
     updateTask(task.id, {
       type,
       description: description.trim(),
@@ -77,6 +80,34 @@ export default function TaskEditModal({ task, onClose }) {
             ))}
           </div>
         </div>
+
+        {/* ── Estado social (solo trabajo_social) ──────────────────────── */}
+        {type === 'trabajo_social' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Estado alta médica <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-2">
+              {[
+                { id: 'con_alta', label: 'Con alta médica',  cls: 'border-emerald-400 bg-emerald-50 text-emerald-800' },
+                { id: 'sin_alta', label: 'Sin alta médica',  cls: 'border-amber-400 bg-amber-50 text-amber-800' },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSocialEstado(opt.id)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    socialEstado === opt.id
+                      ? opt.cls
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Destino (solo traslado) ───────────────────────────────────── */}
         {type === 'solicitud_traslado' && (

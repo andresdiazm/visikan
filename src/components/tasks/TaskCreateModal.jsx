@@ -16,17 +16,20 @@ export default function TaskCreateModal({ patient, onClose }) {
   const [selectedLabels, setSelectedLabels] = useState([])
 
   // Campos extra según tipo
-  const [destino,    setDestino]    = useState('')   // solicitud_traslado
-  const [fechaAlta,  setFechaAlta]  = useState('')   // alta_probable
+  const [destino,      setDestino]      = useState('')   // solicitud_traslado
+  const [fechaAlta,    setFechaAlta]    = useState('')   // alta_probable
+  const [socialEstado, setSocialEstado] = useState('')   // trabajo_social
 
   // Resetear campos extra al cambiar tipo
   useEffect(() => {
     setDestino('')
     setFechaAlta('')
+    setSocialEstado('')
   }, [type])
 
   const canSubmit = description.trim() &&
-    (type !== 'solicitud_traslado' || destino)
+    (type !== 'solicitud_traslado' || destino) &&
+    (type !== 'trabajo_social'     || socialEstado)
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -37,7 +40,7 @@ export default function TaskCreateModal({ patient, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado)
     createTask({
       patientId: patient.id,
       type,
@@ -73,6 +76,34 @@ export default function TaskCreateModal({ patient, onClose }) {
             ))}
           </div>
         </div>
+
+        {/* ── Estado social (solo trabajo_social) ──────────────────────── */}
+        {type === 'trabajo_social' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Estado alta médica <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-2">
+              {[
+                { id: 'con_alta', label: 'Con alta médica',  cls: 'border-emerald-400 bg-emerald-50 text-emerald-800' },
+                { id: 'sin_alta', label: 'Sin alta médica',  cls: 'border-amber-400 bg-amber-50 text-amber-800' },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSocialEstado(opt.id)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    socialEstado === opt.id
+                      ? opt.cls
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Destino (solo traslado) ───────────────────────────────────── */}
         {type === 'solicitud_traslado' && (

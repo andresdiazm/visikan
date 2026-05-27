@@ -6,7 +6,7 @@ import { TypeBadge } from '../ui/Badge'
 import TaskEditModal from '../tasks/TaskEditModal'
 import useVisiStore from '../../store/useVisiStore'
 import { TASK_STATUSES, SERVICES } from '../../data/hierarchy'
-import { parseNotesMeta, formatFechaAlta } from '../../lib/taskMeta'
+import { parseNotesMeta, formatFechaAlta, SOCIAL_ESTADO_META } from '../../lib/taskMeta'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(isoString) {
@@ -35,8 +35,9 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
   const old = isOlderThan24h(task.createdAt, task.status)
 
   // Metadatos estructurados en notes
-  const { destino, fechaAlta, userNotes } = parseNotesMeta(task.notes)
+  const { destino, fechaAlta, socialEstado, userNotes } = parseNotesMeta(task.notes)
   const destinoLabel = destino ? SERVICES.find(s => s.id === destino)?.label ?? destino : null
+  const socialMeta   = socialEstado ? SOCIAL_ESTADO_META[socialEstado] : null
 
   return (
     <div className={`rounded-lg border shadow-sm px-2 py-1.5 group cursor-grab active:cursor-grabbing select-none transition-colors ${
@@ -108,6 +109,15 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
         <div className="flex items-center gap-1 mb-1">
           <span className="text-[10px] font-semibold text-lime-700 bg-lime-50 border border-lime-200 rounded px-1.5 py-0.5">
             Alta: {formatFechaAlta(fechaAlta)}
+          </span>
+        </div>
+      )}
+
+      {/* Estado social */}
+      {task.type === 'trabajo_social' && socialMeta && (
+        <div className="flex items-center gap-1 mb-1">
+          <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${socialMeta.color}`}>
+            {socialMeta.label}
           </span>
         </div>
       )}
