@@ -71,12 +71,17 @@ const useVisiStore = create((set, get) => ({
     const data = await fetchAll()
     set({ ...data, loaded: true })
 
-    // Sincronización en tiempo real: cualquier cambio en DB recarga el estado
+    // Sincronización en tiempo real con debounce para evitar race conditions
+    // (DELETE + INSERT en secuencia disparan dos eventos; solo recargamos al final)
+    let reloadTimer = null
     supabase
       .channel('visikan-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
-        const fresh = await fetchAll()
-        set(fresh)
+      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+        if (reloadTimer) clearTimeout(reloadTimer)
+        reloadTimer = setTimeout(async () => {
+          const fresh = await fetchAll()
+          set(fresh)
+        }, 400)
       })
       .subscribe()
   },
@@ -205,15 +210,16 @@ const useVisiStore = create((set, get) => ({
   async assignPatientToBed(bedId, name, rut) {
     const s    = get()
     const bed  = s.beds.find(b => b.id === bedId)
-    if (!bed) return
+    if (!bed) { console.error('[VISIKAN] assignPatientToBed: bed not found', bedId); return }
 
     const entry  = Object.entries(s.teamAssignments).find(([, ids]) => ids.includes(bedId))
     const teamId = entry ? entry[0].split('__')[1] : null
     const existing = Object.values(s.patients).find(p => p.bedId === bedId)
 
     const id = crypto.randomUUID()
-    const newPat = { id, name, rut, bedId, serviceId: bed.serviceId, teamId, isHomeCare: false }
+    const newPat = { id, name, rut: rut || '', bedId, serviceId: bed.serviceId, teamId, isHomeCare: false }
 
+    // Actualización optimista
     set(s => ({
       patients: { ...Object.fromEntries(Object.entries(s.patients).filter(([, p]) => p.bedId !== bedId)), [id]: newPat },
       tasks: existing
@@ -221,8 +227,23 @@ const useVisiStore = create((set, get) => ({
         : s.tasks,
     }))
 
-    if (existing) await supabase.from('patients').delete().eq('id', existing.id)
-    await supabase.from('patients').insert({ id, name, rut: rut || '', bed_id: bedId, service_id: bed.serviceId, team_id: teamId, is_home_care: false })
+    if (existing) {
+      const { error: delErr } = await supabase.from('patients').delete().eq('id', existing.id)
+      if (delErr) console.error('[VISIKAN] assignPatientToBed delete error:', delErr.message)
+    }
+
+    const { error: insErr } = await supabase.from('patients').insert({
+      id, name, rut: rut || '', bed_id: bedId,
+      service_id: bed.serviceId, team_id: teamId, is_home_care: false,
+    })
+    if (insErr) {
+      console.error('[VISIKAN] assignPatientToBed insert error:', insErr.message, insErr.code, insErr.details)
+      // Revertir el optimistic update
+      set(s => {
+        const { [id]: _, ...patients } = s.patients
+        return { patients }
+      })
+    }
   },
 
   async removePatient(patientId) {

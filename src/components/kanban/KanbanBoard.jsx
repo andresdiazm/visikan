@@ -67,8 +67,8 @@ export default function KanbanBoard({ teamId }) {
     return Object.values(s.patients)
       .filter(p => p.teamId === teamId)
       .sort((a, b) => {
-        const labelA = (a.bedId ? beds.find(b => b.id === a.bedId)?.label : null) ?? a.name
-        const labelB = (b.bedId ? beds.find(b => b.id === b.bedId)?.label : null) ?? b.name
+        const labelA = (a.bedId ? beds.find(bed => bed.id === a.bedId)?.label : null) ?? a.name
+        const labelB = (b.bedId ? beds.find(bed => bed.id === b.bedId)?.label : null) ?? b.name
         return labelA.localeCompare(labelB, 'es', { numeric: true, sensitivity: 'base' })
       })
   })
