@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Activity } from 'lucide-react'
 import TopBar from './TopBar'
@@ -20,15 +20,22 @@ export default function AppShell() {
   const loaded = useVisiStore(s => s.loaded)
   const init   = useVisiStore(s => s.init)
 
-  useEffect(() => { init() }, [])   // carga datos de Supabase al montar
+  // En desktop por defecto abierto; en móvil cerrado
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 640)
+
+  useEffect(() => { init() }, [])
 
   if (!loaded) return <LoadingScreen />
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <TopBar />
+      <TopBar onToggleSidebar={() => setSidebarOpen(v => !v)} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar
+          open={sidebarOpen}
+          onToggle={() => setSidebarOpen(v => !v)}
+          onClose={() => setSidebarOpen(false)}
+        />
         <main className="flex-1 overflow-y-auto px-5 pt-4 pb-8">
           <Outlet />
         </main>

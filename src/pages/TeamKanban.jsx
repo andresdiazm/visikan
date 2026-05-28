@@ -42,27 +42,55 @@ export default function TeamKanban() {
 
   const patients = useVisiStore(selectPatientsByTeam(teamId))
   const beds     = useVisiStore(s => s.beds)
+
+  // Camas asignadas al equipo que NO tienen paciente (para mostrar en dropdown)
+  const unassignedBeds = useVisiStore(s => {
+    const key = `${serviceId}__${teamId}`
+    const teamBedIds = s.teamAssignments[key] || []
+    const assignedBedIds = new Set(
+      Object.values(s.patients).filter(p => p.bedId).map(p => p.bedId)
+    )
+    return teamBedIds
+      .filter(bid => !assignedBedIds.has(bid))
+      .map(bid => s.beds.find(b => b.id === bid))
+      .filter(Boolean)
+  })
   const clearCompleted = useVisiStore(s => s.clearCompletedTasks)
   const completedCount = useVisiStore(s =>
     Object.values(s.tasks).filter(t => t.teamId === teamId && t.status === 'terminada').length
   )
+  const assignPatientToBed = useVisiStore(s => s.assignPatientToBed)
 
   // Enriquecer con bedLabel y filtrar/ordenar para el dropdown
+  // Incluye pacientes reales + camas sin paciente asignado
   const filteredPatients = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return patients
-      .map(p => ({
-        ...p,
-        bedLabel: p.bedId ? beds.find(b => b.id === p.bedId)?.label ?? null : null,
-      }))
+
+    const withPatient = patients.map(p => ({
+      ...p,
+      bedLabel: p.bedId ? beds.find(b => b.id === p.bedId)?.label ?? null : null,
+    }))
+
+    const withoutPatient = unassignedBeds.map(bed => ({
+      id: `__virtual__${bed.id}`,
+      name: '',
+      bedId: bed.id,
+      bedLabel: bed.label,
+      serviceId: bed.serviceId,
+      teamId,
+      isHomeCare: false,
+      _isVirtual: true,
+    }))
+
+    return [...withPatient, ...withoutPatient]
       .filter(p => {
         if (!q) return true
-        return (p.bedLabel ?? p.name).toLowerCase().includes(q)
+        return (p.bedLabel ?? p.name ?? '').toLowerCase().includes(q)
       })
       .sort((a, b) =>
-        (a.bedLabel ?? a.name).localeCompare(b.bedLabel ?? b.name, 'es', { numeric: true, sensitivity: 'base' })
+        (a.bedLabel ?? a.name ?? '').localeCompare(b.bedLabel ?? b.name ?? '', 'es', { numeric: true, sensitivity: 'base' })
       )
-  }, [patients, beds, search])
+  }, [patients, beds, unassignedBeds, search, teamId])
 
   if (!service || !team) return <Navigate to="/" replace />
 
@@ -84,7 +112,7 @@ export default function TeamKanban() {
         </div>
 
         <div className="flex items-center gap-2">
-          {patients.length > 0 && (
+          {(patients.length > 0 || unassignedBeds.length > 0) && (
             <div className="relative" ref={dropdownRef}>
               <Button
                 variant="secondary"
@@ -120,10 +148,16 @@ export default function TeamKanban() {
                         <button
                           key={p.id}
                           className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 last:rounded-b-xl transition-colors"
-                          onClick={() => {
-                            setCreatingForPatient(p)
+                          onClick={async () => {
                             setShowPatientDropdown(false)
                             setSearch('')
+                            if (p._isVirtual) {
+                              // Crear paciente anónimo para la cama
+                              const newPat = await assignPatientToBed(p.bedId, '', '')
+                              if (newPat) setCreatingForPatient(newPat)
+                            } else {
+                              setCreatingForPatient(p)
+                            }
                           }}
                         >
                           {p.isHomeCare
@@ -168,15 +202,15 @@ export default function TeamKanban() {
         </div>
       </div>
 
-      {patients.length === 0 ? (
+      {patients.length === 0 && unassignedBeds.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-          <p className="text-base">No hay pacientes asignados a este equipo.</p>
+          <p className="text-base">No hay camas asignadas a este sector.</p>
           <p className="text-sm mt-1">
-            Ve a <a href="/" className="text-teal-600 hover:underline">Inicio</a> para asignar camas y pacientes.
+            Ve a <a href="/sectores" className="text-teal-600 hover:underline">Sectores</a> para asignar camas.
           </p>
         </div>
       ) : (
-        <KanbanBoard teamId={teamId} />
+        <KanbanBoard teamId={teamId} serviceId={serviceId} />
       )}
 
       {showLabels && <LabelManager onClose={() => setShowLabels(false)} />}

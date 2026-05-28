@@ -56,7 +56,7 @@ function TypeFilter({ selected, onChange }) {
 }
 
 // ── Board ─────────────────────────────────────────────────────────────────────
-export default function KanbanBoard({ teamId }) {
+export default function KanbanBoard({ teamId, serviceId }) {
   const [selectedTypes, setSelectedTypes] = useState(new Set())
 
   const allTasks = useVisiStore(s =>
@@ -64,13 +64,35 @@ export default function KanbanBoard({ teamId }) {
   )
   const patients = useVisiStore(s => {
     const beds = s.beds
-    return Object.values(s.patients)
-      .filter(p => p.teamId === teamId)
-      .sort((a, b) => {
-        const labelA = (a.bedId ? beds.find(bed => bed.id === a.bedId)?.label : null) ?? a.name
-        const labelB = (b.bedId ? beds.find(bed => bed.id === b.bedId)?.label : null) ?? b.name
-        return labelA.localeCompare(labelB, 'es', { numeric: true, sensitivity: 'base' })
+    const realPatients = Object.values(s.patients).filter(p => p.teamId === teamId)
+    const assignedBedIds = new Set(realPatients.filter(p => p.bedId).map(p => p.bedId))
+
+    // Camas del equipo que NO tienen paciente → entradas virtuales
+    const teamKey   = serviceId ? `${serviceId}__${teamId}` : null
+    const teamBedIds = teamKey ? (s.teamAssignments[teamKey] || []) : []
+    const virtualPatients = teamBedIds
+      .filter(bid => !assignedBedIds.has(bid))
+      .map(bid => {
+        const bed = beds.find(b => b.id === bid)
+        if (!bed) return null
+        return {
+          id: `__virtual__${bid}`,
+          name: '',
+          rut: '',
+          bedId: bid,
+          serviceId: bed.serviceId,
+          teamId,
+          isHomeCare: false,
+          _isVirtual: true,
+        }
       })
+      .filter(Boolean)
+
+    return [...realPatients, ...virtualPatients].sort((a, b) => {
+      const labelA = (a.bedId ? beds.find(bed => bed.id === a.bedId)?.label : null) ?? a.name
+      const labelB = (b.bedId ? beds.find(bed => bed.id === b.bedId)?.label : null) ?? b.name
+      return labelA.localeCompare(labelB, 'es', { numeric: true, sensitivity: 'base' })
+    })
   })
   const labels   = useVisiStore(s => s.labels)
   const moveTask = useVisiStore(s => s.moveTask)

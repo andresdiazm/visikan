@@ -243,7 +243,9 @@ const useVisiStore = create((set, get) => ({
         const { [id]: _, ...patients } = s.patients
         return { patients }
       })
+      return null
     }
+    return newPat
   },
 
   async removePatient(patientId) {
