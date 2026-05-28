@@ -23,7 +23,9 @@ export const selectBedsByService = (serviceId) => (state) =>
 export const selectBedsByTeam = (serviceId, teamId) => (state) => {
   const key = `${serviceId}__${teamId}`
   const bedIds = state.teamAssignments[key] || []
-  return state.beds.filter(b => bedIds.includes(b.id))
+  return state.beds
+    .filter(b => bedIds.includes(b.id))
+    .sort((a, b) => a.label.localeCompare(b.label, 'es', { numeric: true, sensitivity: 'base' }))
 }
 
 export const selectUnassignedBedsByService = (serviceId) => (state) => {
