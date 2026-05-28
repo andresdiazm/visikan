@@ -37,38 +37,21 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
 
   // Metadatos estructurados en notes
   const { destino, fechaAlta, socialEstado, userNotes } = parseNotesMeta(task.notes)
-  const destinoLabel    = destino ? SERVICES.find(s => s.id === destino)?.label ?? destino : null
-  const socialMeta      = socialEstado ? SOCIAL_ESTADO_META[socialEstado] : null
-  const prestacionTipo  = getPrestacionTipo(task)
-  const prestacionMeta  = prestacionTipo ? PRESTACION_TIPOS.find(p => p.id === prestacionTipo) : null
+  const destinoLabel   = destino ? SERVICES.find(s => s.id === destino)?.label ?? destino : null
+  const socialMeta     = socialEstado ? SOCIAL_ESTADO_META[socialEstado] : null
+  const prestacionTipo = getPrestacionTipo(task)
+  const prestacionMeta = prestacionTipo ? PRESTACION_TIPOS.find(p => p.id === prestacionTipo) : null
 
   return (
     <div className={`rounded-lg border shadow-sm px-2 py-1.5 group cursor-grab active:cursor-grabbing select-none transition-colors ${
       old ? 'bg-orange-50 border-orange-300 ring-1 ring-orange-300' : 'bg-white border-gray-200'
     }`}>
 
-      {/* Fila: badge + urgente + labels + hora + acciones */}
+      {/* Fila 1: tipo + urgente + hora + acciones */}
       <div className="flex items-center gap-1 mb-1">
-        <TypeBadge type={task.type} subLabel={prestacionMeta?.label} />
+        <TypeBadge type={task.type} />
         {task.priority === 'urgente' && (
           <AlertCircle size={11} className="text-red-500 shrink-0" />
-        )}
-
-        {/* Labels como puntos de color */}
-        {taskLabels.length > 0 && (
-          <div className="flex items-center gap-0.5 ml-0.5">
-            {taskLabels.slice(0, 3).map(lbl => (
-              <span
-                key={lbl.id}
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{ backgroundColor: lbl.color }}
-                title={lbl.name}
-              />
-            ))}
-            {taskLabels.length > 3 && (
-              <span className="text-[9px] text-gray-400 font-medium">+{taskLabels.length - 3}</span>
-            )}
-          </div>
         )}
 
         {/* Timestamp arriba a la derecha */}
@@ -99,25 +82,11 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
         )}
       </div>
 
-      {/* Descripción */}
-      {task.description && (
-        <p className="text-xs text-gray-700 line-clamp-1 leading-tight mb-1">{task.description}</p>
-      )}
-
-      {/* Destino (traslado) */}
-      {task.type === 'solicitud_traslado' && destinoLabel && (
+      {/* Fila 2: pills de contexto — subtipo prestación */}
+      {prestacionMeta && (
         <div className="flex items-center gap-1 mb-1">
-          <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5">
-            → {destinoLabel}
-          </span>
-        </div>
-      )}
-
-      {/* Fecha alta probable */}
-      {task.type === 'alta_probable' && fechaAlta && (
-        <div className="flex items-center gap-1 mb-1">
-          <span className="text-[10px] font-semibold text-lime-700 bg-lime-50 border border-lime-200 rounded px-1.5 py-0.5">
-            Alta: {formatFechaAlta(fechaAlta)}
+          <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${prestacionMeta.color}`}>
+            {prestacionMeta.label}
           </span>
         </div>
       )}
@@ -131,7 +100,45 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
         </div>
       )}
 
-      {/* Notas del usuario (solo si existen, sin las líneas de meta) */}
+      {/* Destino traslado */}
+      {task.type === 'solicitud_traslado' && destinoLabel && (
+        <div className="flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5">
+            → {destinoLabel}
+          </span>
+        </div>
+      )}
+
+      {/* Fecha probable de alta */}
+      {task.type === 'alta_probable' && fechaAlta && (
+        <div className="flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-semibold text-lime-700 bg-lime-50 border border-lime-200 rounded px-1.5 py-0.5">
+            Alta: {formatFechaAlta(fechaAlta)}
+          </span>
+        </div>
+      )}
+
+      {/* Etiquetas — texto completo, debajo del tipo */}
+      {taskLabels.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-1">
+          {taskLabels.map(lbl => (
+            <span
+              key={lbl.id}
+              className="text-[10px] font-medium px-1.5 py-0.5 rounded text-white leading-tight"
+              style={{ backgroundColor: lbl.color }}
+            >
+              {lbl.name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Descripción */}
+      {task.description && (
+        <p className="text-xs text-gray-700 line-clamp-1 leading-tight mb-1">{task.description}</p>
+      )}
+
+      {/* Notas del usuario */}
       {userNotes && (
         <div className="flex items-center gap-1 mb-1 bg-amber-50 rounded px-1.5 py-0.5">
           <FileText size={9} className="text-amber-400 shrink-0" />
@@ -139,7 +146,7 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
         </div>
       )}
 
-      {/* Botones de movimiento de estado */}
+      {/* Botones de movimiento */}
       {onMove && (prevStatus || nextStatus) && (
         <div className="flex justify-end gap-1 mt-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           {prevStatus && (

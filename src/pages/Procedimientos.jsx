@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, BedDouble, Home, ArrowRight, ClipboardList, X } from 'lucide-react'
+import { Clock, BedDouble, Home, ArrowRight, ClipboardList, X, AlertTriangle } from 'lucide-react'
 import useVisiStore from '../store/useVisiStore'
 import { SERVICES, PRESTACION_TIPOS } from '../data/hierarchy'
 import { getPrestacionTipo, PRESTACION_TYPE_IDS } from '../lib/taskMeta'
@@ -179,6 +179,7 @@ export default function Procedimientos() {
   const [filterLabels,  setFilterLabels]  = useState(new Set())
   const [filterService, setFilterService] = useState('')
   const [filterSector,  setFilterSector]  = useState('')
+  const [filter48h,     setFilter48h]     = useState(false)
 
   // Servicios y sectores activos
   const activeServices = useMemo(() => {
@@ -197,13 +198,16 @@ export default function Procedimientos() {
     return labels.filter(l => usedIds.has(l.id))
   }, [allTasks, labels])
 
+  const MS_48H = 48 * 60 * 60 * 1000
+
   // Aplicar filtros
   const filtered = useMemo(() => allTasks.filter(t => {
     if (filterService && t.serviceId !== filterService) return false
     if (filterSector  && t.teamId    !== filterSector)  return false
     if (filterLabels.size > 0 && !t.labels.some(l => filterLabels.has(l))) return false
+    if (filter48h && (Date.now() - new Date(t.createdAt).getTime()) <= MS_48H) return false
     return true
-  }), [allTasks, filterService, filterSector, filterLabels])
+  }), [allTasks, filterService, filterSector, filterLabels, filter48h])
 
   // Agrupar por subtipo
   const bySubtipo = useMemo(() => {
@@ -217,7 +221,7 @@ export default function Procedimientos() {
   }, [filtered])
 
   const totalCount = filtered.length
-  const hasFilters = filterService || filterSector || filterLabels.size > 0
+  const hasFilters = filterService || filterSector || filterLabels.size > 0 || filter48h
 
   function toggleLabel(id) {
     setFilterLabels(prev => {
@@ -231,6 +235,7 @@ export default function Procedimientos() {
     setFilterService('')
     setFilterSector('')
     setFilterLabels(new Set())
+    setFilter48h(false)
   }
 
   return (
@@ -249,6 +254,23 @@ export default function Procedimientos() {
 
       {/* ── Filtros ─────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 mb-3 flex flex-col gap-2">
+
+        {/* Antigüedad > 48h */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wide shrink-0 w-16">Estado:</span>
+          <button
+            onClick={() => setFilter48h(v => !v)}
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
+              filter48h
+                ? 'bg-orange-500 text-white border-transparent'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <AlertTriangle size={10} className={filter48h ? 'opacity-90' : 'text-orange-400'} />
+            Más de 48h pendiente
+            {filter48h && <X size={9} className="opacity-70 ml-0.5" />}
+          </button>
+        </div>
 
         {/* Etiquetas */}
         {activeLabels.length > 0 && (
