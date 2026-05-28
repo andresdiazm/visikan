@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react'
-import { BedDouble, UserPlus, UserCheck, X, Plus, Trash2 } from 'lucide-react'
+import { BedDouble, UserPlus, UserCheck, ArrowRightLeft, Plus, Trash2, X } from 'lucide-react'
 import Button from '../ui/Button'
 import PatientAssignModal from './PatientAssignModal'
+import MoveBedModal from './MoveBedModal'
 import useVisiStore from '../../store/useVisiStore'
 import { selectBedsByTeam, selectBedsByService, selectPatientByBed } from '../../store/selectors'
 
 // ── Fila individual de cama ───────────────────────────────────────────────────
-function BedRow({ bed, serviceId, teamId, onAssignPatient }) {
+function BedRow({ bed, serviceId, teamId, onAssignPatient, onMoveBed }) {
   const patient = useVisiStore(selectPatientByBed(bed.id))
-  const removeBedFromTeam = useVisiStore(s => s.removeBedFromTeam)
   const deleteBed = useVisiStore(s => s.deleteBed)
 
   return (
@@ -32,11 +32,11 @@ function BedRow({ bed, serviceId, teamId, onAssignPatient }) {
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => removeBedFromTeam(bed.id, serviceId, teamId)}
-          title="Mover cama (desasignar equipo)"
-          className="text-amber-400 hover:text-amber-600 hover:bg-amber-50"
+          onClick={() => onMoveBed(bed)}
+          title="Cambiar de equipo"
+          className="text-teal-400 hover:text-teal-600 hover:bg-teal-50"
         >
-          <X size={13} />
+          <ArrowRightLeft size={13} />
         </Button>
         <Button
           size="sm"
@@ -181,11 +181,16 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function TeamBedList({ serviceId, team }) {
+export default function TeamBedList({ serviceId, team, searchQuery = '' }) {
   const [assigningBed, setAssigningBed] = useState(null)
-  const [showAdd, setShowAdd] = useState(false)
+  const [movingBed,    setMovingBed]    = useState(null)
+  const [showAdd,      setShowAdd]      = useState(false)
 
   const teamBeds = useVisiStore(selectBedsByTeam(serviceId, team.id))
+
+  const filteredBeds = searchQuery
+    ? teamBeds.filter(b => b.label.toLowerCase().includes(searchQuery.toLowerCase()))
+    : teamBeds
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -205,18 +210,19 @@ export default function TeamBedList({ serviceId, team }) {
       </div>
 
       <div className="divide-y divide-gray-100">
-        {teamBeds.length === 0 && !showAdd && (
+        {filteredBeds.length === 0 && !showAdd && (
           <p className="text-xs text-gray-400 px-3 py-3 italic">
-            Sin camas. Usa + para crear una.
+            {searchQuery ? 'Sin camas que coincidan.' : 'Sin camas. Usa + para crear una.'}
           </p>
         )}
-        {teamBeds.map(bed => (
+        {filteredBeds.map(bed => (
           <BedRow
             key={bed.id}
             bed={bed}
             serviceId={serviceId}
             teamId={team.id}
             onAssignPatient={setAssigningBed}
+            onMoveBed={setMovingBed}
           />
         ))}
       </div>
@@ -231,6 +237,9 @@ export default function TeamBedList({ serviceId, team }) {
 
       {assigningBed && (
         <PatientAssignModal bed={assigningBed} onClose={() => setAssigningBed(null)} />
+      )}
+      {movingBed && (
+        <MoveBedModal bed={movingBed} onClose={() => setMovingBed(null)} />
       )}
     </div>
   )
