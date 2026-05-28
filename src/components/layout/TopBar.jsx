@@ -1,13 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Activity, BedDouble, ClipboardList, LayoutGrid, LogOut, UserPlus, Users } from 'lucide-react'
+import { Activity, ClipboardList, LogOut, Users } from 'lucide-react'
 
 const NAV = [
-  { label: 'Inicio',         href: '/',               icon: LayoutGrid   },
-  { label: 'Sectores',       href: '/sectores',       icon: BedDouble    },
-  { label: 'Altas',          href: '/altas',          icon: LogOut       },
-  { label: 'Procedimientos', href: '/procedimientos', icon: ClipboardList },
-  { label: 'Sociales',       href: '/sociales',       icon: Users        },
-  { label: 'Usuarios',       href: '/admin/users',    icon: UserPlus     },
+  { label: 'Altas y traslados', href: '/altas',          icon: LogOut        },
+  { label: 'Procedimientos',    href: '/procedimientos', icon: ClipboardList },
+  { label: 'Sociales',          href: '/sociales',       icon: Users         },
 ]
 
 export default function TopBar() {

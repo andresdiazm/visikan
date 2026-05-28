@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 
-export default function Modal({ title, onClose, children, size = 'md' }) {
+export default function Modal({ title, onClose, children, footer, size = 'md' }) {
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handleKey)
@@ -31,6 +31,12 @@ export default function Modal({ title, onClose, children, size = 'md' }) {
         <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 sm:py-5">
           {children}
         </div>
+        {/* Footer sticky (botones de acción) */}
+        {footer && (
+          <div className="shrink-0 border-t border-gray-100 px-5 py-3 sm:px-6 sm:py-4 bg-white rounded-b-2xl">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -41,7 +41,8 @@ export default function TaskEditModal({ task, onClose }) {
     setType(newType)
   }
 
-  const canSubmit = description.trim() &&
+  // Descripción ahora es opcional
+  const canSubmit =
     (type !== 'solicitud_traslado'  || destino) &&
     (type !== 'trabajo_social'      || socialEstado) &&
     (type !== 'solicitud_prestacion'|| prestacionTipo)
@@ -66,9 +67,20 @@ export default function TaskEditModal({ task, onClose }) {
     onClose()
   }
 
+  const footer = (
+    <div className="flex gap-2">
+      <Button type="submit" form="task-edit-form" variant="primary" className="flex-1" disabled={!canSubmit}>
+        Guardar cambios
+      </Button>
+      <Button type="button" variant="secondary" onClick={onClose}>
+        Cancelar
+      </Button>
+    </div>
+  )
+
   return (
-    <Modal title="Editar tarea" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <Modal title="Editar tarea" onClose={onClose} footer={footer}>
+      <form id="task-edit-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
 
         {/* ── Tipo de tarea ─────────────────────────────────────────────── */}
         <div>
@@ -180,16 +192,42 @@ export default function TaskEditModal({ task, onClose }) {
           </div>
         )}
 
-        {/* ── Descripción ───────────────────────────────────────────────── */}
+        {/* ── Etiquetas ─────────────────────────────────────────────────── */}
+        {labels.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Etiquetas</label>
+            <div className="flex flex-wrap gap-2">
+              {labels.map(lbl => (
+                <button
+                  key={lbl.id}
+                  type="button"
+                  onClick={() => toggleLabel(lbl.id)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium text-white transition-opacity ${
+                    selectedLabels.includes(lbl.id)
+                      ? 'opacity-100 ring-2 ring-offset-1 ring-gray-400'
+                      : 'opacity-50 hover:opacity-75'
+                  }`}
+                  style={{ backgroundColor: lbl.color }}
+                >
+                  {lbl.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Descripción (opcional) ────────────────────────────────────── */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Descripción{' '}
+            <span className="font-normal text-gray-400">(opcional)</span>
+          </label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            rows={3}
+            rows={2}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
             autoFocus
-            required
           />
         </div>
 
@@ -231,38 +269,6 @@ export default function TaskEditModal({ task, onClose }) {
           </div>
         </div>
 
-        {/* ── Etiquetas ─────────────────────────────────────────────────── */}
-        {labels.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Etiquetas</label>
-            <div className="flex flex-wrap gap-2">
-              {labels.map(lbl => (
-                <button
-                  key={lbl.id}
-                  type="button"
-                  onClick={() => toggleLabel(lbl.id)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium text-white transition-opacity ${
-                    selectedLabels.includes(lbl.id)
-                      ? 'opacity-100 ring-2 ring-offset-1 ring-gray-400'
-                      : 'opacity-50 hover:opacity-75'
-                  }`}
-                  style={{ backgroundColor: lbl.color }}
-                >
-                  {lbl.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-2 pt-1">
-          <Button type="submit" variant="primary" className="flex-1" disabled={!canSubmit}>
-            Guardar cambios
-          </Button>
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancelar
-          </Button>
-        </div>
       </form>
     </Modal>
   )

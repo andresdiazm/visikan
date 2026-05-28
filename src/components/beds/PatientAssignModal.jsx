@@ -20,7 +20,6 @@ export default function PatientAssignModal({ bed, onClose }) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!name.trim()) return
     assignPatientToBed(bed.id, name.trim(), rut.trim())
     onClose()
   }
@@ -36,7 +35,10 @@ export default function PatientAssignModal({ bed, onClose }) {
     <Modal title={`Asignar paciente — ${bed.label}`} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del paciente</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre del paciente{' '}
+            <span className="font-normal text-gray-400">(opcional)</span>
+          </label>
           <input
             type="text"
             value={name}
@@ -44,7 +46,6 @@ export default function PatientAssignModal({ bed, onClose }) {
             placeholder="Ej: Juan Pérez González"
             className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             autoFocus
-            required
           />
         </div>
         <div>

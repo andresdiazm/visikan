@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Activity } from 'lucide-react'
 import TopBar from './TopBar'
+import Sidebar from './Sidebar'
 import useVisiStore from '../../store/useVisiStore'
 
 function LoadingScreen() {
@@ -26,9 +27,12 @@ export default function AppShell() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <TopBar />
-      <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 pb-8">
-        <Outlet />
-      </main>
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto px-5 pt-4 pb-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

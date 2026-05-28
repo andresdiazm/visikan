@@ -11,7 +11,7 @@ const PatientSection = memo(function PatientSection({ patient, tasks }) {
 
   // Con camas dinámicas el label es bed.label; fallback a patient.name para HosDom/sin cama
   const bedLabel = patient.isHomeCare ? null : (bed?.label ?? null)
-  const subLabel = bedLabel ? patient.name : null
+  const subLabel = bedLabel && patient.name ? patient.name : null
 
   return (
     <div className="mb-2">

@@ -47,7 +47,7 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
       old ? 'bg-orange-50 border-orange-300 ring-1 ring-orange-300' : 'bg-white border-gray-200'
     }`}>
 
-      {/* Fila única: badge + urgente + labels (puntos) + acciones */}
+      {/* Fila: badge + urgente + labels + hora + acciones */}
       <div className="flex items-center gap-1 mb-1">
         <TypeBadge type={task.type} subLabel={prestacionMeta?.label} />
         {task.priority === 'urgente' && (
@@ -71,32 +71,38 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
           </div>
         )}
 
-        <div className="ml-auto flex items-center gap-0.5">
-          {onEdit && (
-            <button
-              onPointerDown={e => e.stopPropagation()}
-              onClick={onEdit}
-              className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-teal-500 transition-all"
-              title="Editar tarea"
-            >
-              <Pencil size={11} />
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onPointerDown={e => e.stopPropagation()}
-              onClick={onDelete}
-              className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all"
-              title="Eliminar tarea"
-            >
-              <Trash2 size={11} />
-            </button>
-          )}
+        {/* Timestamp arriba a la derecha */}
+        <div className={`ml-auto flex items-center gap-0.5 ${old ? 'text-orange-500' : 'text-gray-400'}`}>
+          <Clock size={9} />
+          <span className="text-[10px]">{timeAgo(task.createdAt)}</span>
         </div>
+
+        {onEdit && (
+          <button
+            onPointerDown={e => e.stopPropagation()}
+            onClick={onEdit}
+            className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-teal-500 transition-all"
+            title="Editar tarea"
+          >
+            <Pencil size={11} />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onPointerDown={e => e.stopPropagation()}
+            onClick={onDelete}
+            className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all"
+            title="Eliminar tarea"
+          >
+            <Trash2 size={11} />
+          </button>
+        )}
       </div>
 
       {/* Descripción */}
-      <p className="text-xs text-gray-700 line-clamp-1 leading-tight mb-1">{task.description}</p>
+      {task.description && (
+        <p className="text-xs text-gray-700 line-clamp-1 leading-tight mb-1">{task.description}</p>
+      )}
 
       {/* Destino (traslado) */}
       {task.type === 'solicitud_traslado' && destinoLabel && (
@@ -133,38 +139,31 @@ export function TaskCardContent({ task, labels, onDelete, onEdit, onMove }) {
         </div>
       )}
 
-      {/* Fila inferior: timestamp + botones movimiento */}
-      <div className="flex items-center justify-between">
-        <div className={`flex items-center gap-0.5 ${old ? 'text-orange-500' : 'text-gray-400'}`}>
-          <Clock size={9} />
-          <span className="text-[10px]">{timeAgo(task.createdAt)}</span>
+      {/* Botones de movimiento de estado */}
+      {onMove && (prevStatus || nextStatus) && (
+        <div className="flex justify-end gap-1 mt-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+          {prevStatus && (
+            <button
+              onPointerDown={e => e.stopPropagation()}
+              onClick={() => onMove(prevStatus)}
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600"
+              title={`← ${statusLabel[prevStatus]}`}
+            >
+              <ChevronLeft size={9} />
+            </button>
+          )}
+          {nextStatus && (
+            <button
+              onPointerDown={e => e.stopPropagation()}
+              onClick={() => onMove(nextStatus)}
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 hover:bg-teal-200 text-teal-700"
+              title={`${statusLabel[nextStatus]} →`}
+            >
+              <ChevronRight size={9} />
+            </button>
+          )}
         </div>
-
-        {onMove && (prevStatus || nextStatus) && (
-          <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-            {prevStatus && (
-              <button
-                onPointerDown={e => e.stopPropagation()}
-                onClick={() => onMove(prevStatus)}
-                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600"
-                title={`← ${statusLabel[prevStatus]}`}
-              >
-                <ChevronLeft size={9} />
-              </button>
-            )}
-            {nextStatus && (
-              <button
-                onPointerDown={e => e.stopPropagation()}
-                onClick={() => onMove(nextStatus)}
-                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 hover:bg-teal-200 text-teal-700"
-                title={`${statusLabel[nextStatus]} →`}
-              >
-                <ChevronRight size={9} />
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
