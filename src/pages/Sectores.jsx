@@ -167,9 +167,9 @@ export default function Sectores() {
   return (
     <div className="py-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-bay-blue">Gestión de Sectores</h1>
+        <h1 className="text-2xl font-display font-bold text-bay-blue">Asignación de Camas</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Crea y administra los sectores de cada servicio. Expande un sector para gestionar sus camas.
+          Crea sectores por servicio y asigna camas a cada uno.
         </p>
       </div>
       <div className="flex flex-col gap-4">

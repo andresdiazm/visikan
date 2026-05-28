@@ -1,7 +1,8 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Activity, ClipboardList, LogOut, Menu, Users } from 'lucide-react'
+import { Activity, ClipboardList, LayoutGrid, LogOut, Menu, Users } from 'lucide-react'
 
 const NAV = [
+  { label: 'Dashboard',         href: '/',               icon: LayoutGrid    },
   { label: 'Altas y traslados', href: '/altas',          icon: LogOut        },
   { label: 'Procedimientos',    href: '/procedimientos', icon: ClipboardList },
   { label: 'Sociales',          href: '/sociales',       icon: Users         },

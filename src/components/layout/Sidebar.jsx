@@ -3,7 +3,7 @@ import { BedDouble, ChevronLeft, ChevronRight, LayoutGrid, UserPlus } from 'luci
 
 const NAV = [
   { label: 'Inicio',    href: '/',            icon: LayoutGrid },
-  { label: 'Sectores',  href: '/sectores',    icon: BedDouble  },
+  { label: 'Asign. Camas', href: '/sectores', icon: BedDouble  },
   { label: 'Usuarios',  href: '/admin/users', icon: UserPlus   },
 ]
 

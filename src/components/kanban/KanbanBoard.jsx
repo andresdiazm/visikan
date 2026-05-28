@@ -27,7 +27,7 @@ function TypeFilter({ selected, onChange }) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap mb-3">
       <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wide shrink-0">Filtrar:</span>
-      {TASK_TYPES.map(t => {
+      {TASK_TYPES.filter(t => !t.hidden).map(t => {
         const active = selected.has(t.id)
         return (
           <button
