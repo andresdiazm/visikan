@@ -206,6 +206,59 @@ const useVisiStore = create((set, get) => ({
     await supabase.from('team_assignments').delete().eq('bed_id', bedId)
   },
 
+  // Reasigna una cama a otro servicio/sector preservando todas las tareas vinculadas
+  async moveBedToTeam(bedId, toServiceId, toTeamId) {
+    const s = get()
+    const bed = s.beds.find(b => b.id === bedId)
+    if (!bed) return
+
+    // Clave actual en teamAssignments
+    const currentEntry = Object.entries(s.teamAssignments).find(([, ids]) => ids.includes(bedId))
+    const [currentKey] = currentEntry || [null]
+
+    // Paciente actualmente en esta cama
+    const patient = Object.values(s.patients).find(p => p.bedId === bedId)
+
+    // ── Actualización optimista ──────────────────────────────────────────
+    const newTA = { ...s.teamAssignments }
+    if (currentKey) newTA[currentKey] = (newTA[currentKey] || []).filter(id => id !== bedId)
+    if (toTeamId) {
+      const newKey = `${toServiceId}__${toTeamId}`
+      newTA[newKey] = [...(newTA[newKey] || []), bedId]
+    }
+
+    const updatedBeds = s.beds.map(b => b.id === bedId ? { ...b, serviceId: toServiceId } : b)
+
+    let updatedPatients = { ...s.patients }
+    let updatedTasks    = { ...s.tasks }
+    if (patient) {
+      updatedPatients[patient.id] = { ...patient, serviceId: toServiceId, teamId: toTeamId || null }
+      updatedTasks = Object.fromEntries(
+        Object.entries(s.tasks).map(([tid, t]) =>
+          t.patientId === patient.id
+            ? [tid, { ...t, serviceId: toServiceId, teamId: toTeamId || null }]
+            : [tid, t]
+        )
+      )
+    }
+    set({ teamAssignments: newTA, beds: updatedBeds, patients: updatedPatients, tasks: updatedTasks })
+
+    // ── Persistencia en DB ───────────────────────────────────────────────
+    await supabase.from('beds').update({ service_id: toServiceId }).eq('id', bedId)
+    await supabase.from('team_assignments').delete().eq('bed_id', bedId)
+    if (toTeamId) {
+      await supabase.from('team_assignments').insert({ bed_id: bedId, service_id: toServiceId, team_id: toTeamId })
+    }
+    if (patient) {
+      await supabase.from('patients')
+        .update({ service_id: toServiceId, team_id: toTeamId || null })
+        .eq('id', patient.id)
+      await supabase.from('tasks')
+        .update({ service_id: toServiceId, team_id: toTeamId || null })
+        .eq('patient_id', patient.id)
+    }
+  },
+
   // ── PACIENTES ───────────────────────────────────────────────────────────────
   async assignPatientToBed(bedId, name, rut) {
     const s    = get()
