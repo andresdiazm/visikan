@@ -7,6 +7,7 @@ import TeamKanban from './pages/TeamKanban'
 import Altas from './pages/Altas'
 import Sociales from './pages/Sociales'
 import Procedimientos from './pages/Procedimientos'
+import Interconsultas from './pages/Interconsultas'
 import AdminUsers from './pages/AdminUsers'
 
 export default function App() {
@@ -17,8 +18,9 @@ export default function App() {
           <Route path="/"                                    element={<Landing />} />
           <Route path="/sectores"                            element={<Sectores />} />
           <Route path="/altas"                               element={<Altas />} />
-          <Route path="/sociales"                            element={<Sociales />} />
+          <Route path="/interconsultas"                      element={<Interconsultas />} />
           <Route path="/procedimientos"                      element={<Procedimientos />} />
+          <Route path="/sociales"                            element={<Sociales />} />
           <Route path="/admin/users"                         element={<AdminUsers />} />
           <Route path="/service/:serviceId"                  element={<ServiceDashboard />} />
           <Route path="/service/:serviceId/team/:teamId"     element={<TeamKanban />} />
