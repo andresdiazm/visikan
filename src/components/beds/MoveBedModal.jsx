@@ -19,8 +19,7 @@ export default function MoveBedModal({ bed, onClose }) {
     setToTeam('')   // reset sector al cambiar servicio
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleSubmit() {
     if (!canSubmit) return
     await moveBedToTeam(bed.id, toService, toTeam || null)
     onClose()
@@ -28,7 +27,7 @@ export default function MoveBedModal({ bed, onClose }) {
 
   const footer = (
     <div className="flex gap-2">
-      <Button type="submit" form="move-bed-form" variant="primary" className="flex-1" disabled={!canSubmit}>
+      <Button type="button" variant="primary" className="flex-1" disabled={!canSubmit} onClick={handleSubmit}>
         Mover cama
       </Button>
       <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
@@ -37,7 +36,7 @@ export default function MoveBedModal({ bed, onClose }) {
 
   return (
     <Modal title={`Mover cama ${bed.label}`} onClose={onClose} footer={footer} size="sm">
-      <form id="move-bed-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
 
         <p className="text-sm text-gray-500">
           Selecciona el servicio y sector destino. Las tareas vinculadas a esta cama se mantendrán.
@@ -111,7 +110,7 @@ export default function MoveBedModal({ bed, onClose }) {
           </div>
         )}
 
-      </form>
+      </div>
     </Modal>
   )
 }
