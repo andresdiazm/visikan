@@ -9,7 +9,7 @@ export default function TaskCreateModal({ patient, onClose }) {
   const createTask = useVisiStore(s => s.createTask)
   const labels     = useVisiStore(s => s.labels)
 
-  const [type,           setType]           = useState(TASK_TYPES[0].id)
+  const [type,           setType]           = useState('')
   const [description,    setDescription]    = useState('')
   const [notes,          setNotes]          = useState('')
   const [priority,       setPriority]       = useState('normal')
@@ -31,6 +31,7 @@ export default function TaskCreateModal({ patient, onClose }) {
 
   // Descripción ahora es opcional
   const canSubmit =
+    !!type &&
     (type !== 'solicitud_traslado'  || destino) &&
     (type !== 'trabajo_social'      || socialEstado) &&
     (type !== 'solicitud_prestacion'|| prestacionTipo)
