@@ -6,6 +6,14 @@ import { SERVICES, PRESTACION_TIPOS } from '../data/hierarchy'
 import { getPrestacionTipo, PRESTACION_TYPE_IDS } from '../lib/taskMeta'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+function getContrastColor(hex) {
+  const h = (hex || '#000000').replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1a1a1a' : '#ffffff'
+}
+
 function timeAgo(isoString) {
   if (!isoString) return ''
   const diff = Date.now() - new Date(isoString).getTime()
@@ -62,20 +70,32 @@ function TaskRow({ task, patient, bed, teamLabel, service, labels }) {
         )}
       </div>
 
+      {/* Etiquetas como pills con nombre */}
+      <div className="w-32 shrink-0 flex flex-wrap gap-0.5">
+        {taskLabels.length > 0 ? (
+          <>
+            {taskLabels.slice(0, 2).map(lbl => (
+              <span
+                key={lbl.id}
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded leading-tight whitespace-nowrap"
+                style={{ backgroundColor: lbl.color, color: getContrastColor(lbl.color) }}
+              >
+                {lbl.name}
+              </span>
+            ))}
+            {taskLabels.length > 2 && (
+              <span className="text-[9px] text-gray-400 self-center">+{taskLabels.length - 2}</span>
+            )}
+          </>
+        ) : (
+          <span className="text-[10px] text-gray-300">—</span>
+        )}
+      </div>
+
       {/* Descripción */}
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-600 truncate">{task.description || '—'}</p>
       </div>
-
-      {/* Etiquetas como puntos */}
-      {taskLabels.length > 0 && (
-        <div className="flex items-center gap-0.5 shrink-0">
-          {taskLabels.slice(0, 4).map(lbl => (
-            <span key={lbl.id} className="w-2 h-2 rounded-full" style={{ backgroundColor: lbl.color }} title={lbl.name} />
-          ))}
-          {taskLabels.length > 4 && <span className="text-[9px] text-gray-400">+{taskLabels.length - 4}</span>}
-        </div>
-      )}
 
       {/* Timestamp */}
       <div className={`flex items-center gap-0.5 shrink-0 ${old ? 'text-orange-500' : 'text-gray-400'}`}>
@@ -119,8 +139,8 @@ function SubtipoSection({ subtipo, tasks, patients, beds, teams, labels }) {
         <span className="w-24 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">Cama</span>
         <span className="w-32 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">Servicio / Sector</span>
         <span className="w-24 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">Tipo</span>
+        <span className="w-32 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">Etiqueta</span>
         <span className="flex-1 text-[10px] uppercase tracking-wide text-gray-400 font-medium">Descripción</span>
-        <span className="w-12 shrink-0" />
         <span className="w-8 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">T.</span>
         <span className="w-4 shrink-0" />
       </div>
