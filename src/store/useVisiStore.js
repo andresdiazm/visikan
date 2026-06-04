@@ -13,7 +13,7 @@ const toTask = r => ({
   teamId: r.team_id, serviceId: r.service_id,
   type: r.type, description: r.description,
   priority: r.priority || 'normal',
-  labels: r.label_ids || [],       // columna real en DB es label_ids
+  labels: r.labels || [],
   notes: r.notes || '',             // columna notes (requiere ALTER TABLE)
   status: r.status || 'iniciada',
   createdAt: r.created_at,
@@ -324,7 +324,7 @@ const useVisiStore = create((set, get) => ({
     const { error } = await supabase.from('tasks').insert({
       id, patient_id: patientId, team_id: patient.teamId, service_id: patient.serviceId,
       type, description, priority: priority || 'normal',
-      label_ids: labels || [], notes: notes || '', status: 'iniciada',
+      labels: labels || [], notes: notes || '', status: 'iniciada',
     })
     if (error) {
       console.error('[VISIKAN] createTask error:', error.message, error.code)
@@ -343,7 +343,7 @@ const useVisiStore = create((set, get) => ({
     if (updates.type        !== undefined) db.type        = updates.type
     if (updates.description !== undefined) db.description = updates.description
     if (updates.priority    !== undefined) db.priority    = updates.priority
-    if (updates.labels      !== undefined) db.label_ids   = updates.labels   // columna real: label_ids
+    if (updates.labels      !== undefined) db.labels      = updates.labels
     if (updates.notes       !== undefined) db.notes       = updates.notes
     if (updates.status      !== undefined) db.status      = updates.status
     const { error } = await supabase.from('tasks').update(db).eq('id', taskId)
@@ -378,7 +378,7 @@ const useVisiStore = create((set, get) => ({
     }))
     await supabase.from('labels').delete().eq('id', labelId)
     for (const t of affected) {
-      await supabase.from('tasks').update({ label_ids: t.labels.filter(l => l !== labelId) }).eq('id', t.id)
+      await supabase.from('tasks').update({ labels: t.labels.filter(l => l !== labelId) }).eq('id', t.id)
     }
   },
 }))
