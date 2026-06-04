@@ -75,7 +75,7 @@ export default function KanbanColumn({ status, tasks, patients, filtered = false
                   <div className="flex-1 h-px bg-gray-200 ml-1" />
                 </div>
                 {items.map(({ patient, tasks: ptasks }) => (
-                  <PatientSection key={patient.id} patient={patient} tasks={ptasks} />
+                  <PatientSection key={patient.bedId || patient.id} patient={patient} tasks={ptasks} />
                 ))}
               </div>
             ))
