@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { Tags, Trash2, Plus, ChevronDown, Search, BedDouble, Home } from 'lucide-react'
+import { Tags, Trash2, Plus, Search, BedDouble, Home } from 'lucide-react'
 import Breadcrumb from '../components/layout/Breadcrumb'
 import KanbanBoard from '../components/kanban/KanbanBoard'
 import LabelManager from '../components/tasks/LabelManager'
 import TaskCreateModal from '../components/tasks/TaskCreateModal'
+import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import { SERVICES } from '../data/hierarchy'
 import useVisiStore from '../store/useVisiStore'
@@ -16,26 +17,7 @@ export default function TeamKanban() {
   const [creatingForPatient, setCreatingForPatient] = useState(null)
   const [showPatientDropdown, setShowPatientDropdown] = useState(false)
   const [search, setSearch] = useState('')
-  const dropdownRef = useRef(null)
   const searchRef = useRef(null)
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowPatientDropdown(false)
-        setSearch('')
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  // Enfocar buscador al abrir dropdown
-  useEffect(() => {
-    if (showPatientDropdown && searchRef.current) {
-      setTimeout(() => searchRef.current?.focus(), 50)
-    }
-  }, [showPatientDropdown])
 
   const service = SERVICES.find(s => s.id === serviceId)
   const team = useVisiStore(s => (s.teams[serviceId] || []).find(t => t.id === teamId))
@@ -112,74 +94,6 @@ export default function TeamKanban() {
         </div>
 
         <div className="flex items-center gap-2">
-          {(patients.length > 0 || unassignedBeds.length > 0) && (
-            <div className="relative" ref={dropdownRef}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => { setShowPatientDropdown(v => !v); setSearch('') }}
-              >
-                <Plus size={14} /> Nueva tarea <ChevronDown size={12} />
-              </Button>
-
-              {showPatientDropdown && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-64">
-                  {/* Buscador */}
-                  <div className="px-2 pt-2 pb-1">
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
-                      <Search size={12} className="text-gray-400 shrink-0" />
-                      <input
-                        ref={searchRef}
-                        type="text"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Buscar sala o cama..."
-                        className="flex-1 text-xs bg-transparent outline-none text-gray-700 placeholder-gray-400"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Lista */}
-                  <div className="max-h-64 overflow-y-auto pb-1">
-                    {filteredPatients.length === 0 ? (
-                      <p className="px-3 py-3 text-xs text-gray-400 italic text-center">Sin resultados</p>
-                    ) : (
-                      filteredPatients.map(p => (
-                        <button
-                          key={p.id}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 last:rounded-b-xl transition-colors"
-                          onClick={async () => {
-                            setShowPatientDropdown(false)
-                            setSearch('')
-                            if (p._isVirtual) {
-                              // Crear paciente anónimo para la cama
-                              const newPat = await assignPatientToBed(p.bedId, '', '')
-                              if (newPat) setCreatingForPatient(newPat)
-                            } else {
-                              setCreatingForPatient(p)
-                            }
-                          }}
-                        >
-                          {p.isHomeCare
-                            ? <Home size={13} className="text-purple-400 shrink-0" />
-                            : <BedDouble size={13} className="text-gray-400 shrink-0" />
-                          }
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-gray-800 truncate">
-                              {p.bedLabel ?? p.name}
-                            </p>
-                            {p.bedLabel && (
-                              <p className="text-[10px] text-gray-400 truncate">{p.name}</p>
-                            )}
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {completedCount > 0 && (
             <Button
@@ -211,6 +125,79 @@ export default function TeamKanban() {
         </div>
       ) : (
         <KanbanBoard teamId={teamId} serviceId={serviceId} />
+      )}
+
+      {/* FAB — botón + fijo arriba a la derecha */}
+      {(patients.length > 0 || unassignedBeds.length > 0) && (
+        <button
+          onClick={() => { setShowPatientDropdown(true); setSearch('') }}
+          className="fixed top-16 right-4 z-30 bg-teal text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-teal-600 active:scale-95 transition-all"
+          title="Nueva tarea"
+        >
+          <Plus size={22} />
+        </button>
+      )}
+
+      {/* Modal selector de cama */}
+      {showPatientDropdown && (
+        <Modal
+          title="Nueva tarea"
+          onClose={() => { setShowPatientDropdown(false); setSearch('') }}
+          size="sm"
+        >
+          <div className="flex flex-col gap-3">
+            {/* Buscador */}
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+              <Search size={14} className="text-gray-400 shrink-0" />
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar sala o cama..."
+                className="flex-1 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                autoFocus
+              />
+            </div>
+
+            {/* Lista de camas / pacientes */}
+            <div className="flex flex-col divide-y divide-gray-100">
+              {filteredPatients.length === 0 ? (
+                <p className="py-6 text-sm text-gray-400 italic text-center">Sin resultados</p>
+              ) : (
+                filteredPatients.map(p => (
+                  <button
+                    key={p.id}
+                    className="flex items-center gap-3 py-3 text-left hover:bg-gray-50 rounded-lg px-1 transition-colors"
+                    onClick={async () => {
+                      setShowPatientDropdown(false)
+                      setSearch('')
+                      if (p._isVirtual) {
+                        const newPat = await assignPatientToBed(p.bedId, '', '')
+                        if (newPat) setCreatingForPatient(newPat)
+                      } else {
+                        setCreatingForPatient(p)
+                      }
+                    }}
+                  >
+                    {p.isHomeCare
+                      ? <Home size={15} className="text-purple-400 shrink-0" />
+                      : <BedDouble size={15} className="text-gray-400 shrink-0" />
+                    }
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">
+                        {p.bedLabel ?? p.name}
+                      </p>
+                      {p.bedLabel && p.name && (
+                        <p className="text-xs text-gray-400 truncate">{p.name}</p>
+                      )}
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </Modal>
       )}
 
       {showLabels && <LabelManager onClose={() => setShowLabels(false)} />}
