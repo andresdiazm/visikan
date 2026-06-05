@@ -114,7 +114,7 @@ export default function LabelManager({ onClose }) {
                   >
                     {lbl.name}
                   </span>
-                  <span className="flex-1 text-[10px] text-gray-400 font-mono">{lbl.color.toUpperCase()}</span>
+                  <span className="flex-1" />
                   <Button
                     size="icon"
                     variant="ghost"

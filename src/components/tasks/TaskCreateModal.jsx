@@ -70,18 +70,18 @@ export default function TaskCreateModal({ patient, onClose }) {
 
   return (
     <Modal title={`Nueva tarea — ${patient.name || 'Cama'}`} onClose={onClose} footer={footer}>
-      <form id="task-create-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form id="task-create-form" onSubmit={handleSubmit} className="flex flex-col gap-3">
 
         {/* ── Tipo de tarea ─────────────────────────────────────────────── */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de tarea</label>
-          <div className="grid grid-cols-3 sm:grid-cols-2 gap-2">
+          <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de tarea</label>
+          <div className="grid grid-cols-2 gap-1.5">
             {TASK_TYPES.filter(t => !t.hidden).map(t => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => setType(t.id)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium text-left border transition-colors ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium text-left border transition-colors ${
                   type === t.id
                     ? 'border-teal bg-teal-50 text-teal-800'
                     : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
@@ -96,16 +96,16 @@ export default function TaskCreateModal({ patient, onClose }) {
         {/* ── Subtipo de prestación ────────────────────────────────────── */}
         {type === 'solicitud_prestacion' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Tipo de prestación <span className="text-red-500">*</span>
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {PRESTACION_TIPOS.map(opt => (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => setPrestacionTipo(opt.id)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  className={`py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                     prestacionTipo === opt.id
                       ? `${opt.color} border-transparent`
                       : 'border-gray-200 text-gray-500 hover:bg-gray-50'
@@ -121,10 +121,10 @@ export default function TaskCreateModal({ patient, onClose }) {
         {/* ── Estado social (solo trabajo_social) ──────────────────────── */}
         {type === 'trabajo_social' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Estado alta médica <span className="text-red-500">*</span>
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {[
                 { id: 'con_alta', label: 'Con alta médica',  cls: 'border-emerald-400 bg-emerald-50 text-emerald-800' },
                 { id: 'sin_alta', label: 'Sin alta médica',  cls: 'border-amber-400 bg-amber-50 text-amber-800' },
@@ -133,7 +133,7 @@ export default function TaskCreateModal({ patient, onClose }) {
                   key={opt.id}
                   type="button"
                   onClick={() => setSocialEstado(opt.id)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  className={`py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                     socialEstado === opt.id
                       ? opt.cls
                       : 'border-gray-200 text-gray-500 hover:bg-gray-50'
@@ -185,7 +185,7 @@ export default function TaskCreateModal({ patient, onClose }) {
         {/* ── Etiquetas ─────────────────────────────────────────────────── */}
         {labels.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Etiquetas</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Etiquetas</label>
             <div className="flex flex-wrap gap-2">
               {labels.map(lbl => (
                 <button
@@ -208,45 +208,43 @@ export default function TaskCreateModal({ patient, onClose }) {
 
         {/* ── Descripción (opcional) ────────────────────────────────────── */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Descripción{' '}
-            <span className="font-normal text-gray-400">(opcional)</span>
+          <label className="block text-xs font-medium text-gray-700 mb-1">
+            Descripción <span className="font-normal text-gray-400">(opcional)</span>
           </label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder="Describe el pendiente..."
-            rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
+            rows={1}
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
             autoFocus
           />
         </div>
 
         {/* ── Notas ─────────────────────────────────────────────────────── */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Notas adicionales{' '}
-            <span className="font-normal text-gray-400">(opcional)</span>
+          <label className="block text-xs font-medium text-gray-700 mb-1">
+            Notas <span className="font-normal text-gray-400">(opcional)</span>
           </label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Observaciones, detalles de seguimiento..."
-            rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
+            rows={1}
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
           />
         </div>
 
         {/* ── Prioridad ─────────────────────────────────────────────────── */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
-          <div className="flex gap-2">
+          <label className="block text-xs font-medium text-gray-700 mb-1">Prioridad</label>
+          <div className="grid grid-cols-2 gap-1.5">
             {['normal', 'urgente'].map(p => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPriority(p)}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                className={`py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                   priority === p
                     ? p === 'urgente'
                       ? 'border-red-400 bg-red-50 text-red-700'
