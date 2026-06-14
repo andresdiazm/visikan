@@ -62,7 +62,9 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
   const assignBedToTeam = useVisiStore(s => s.assignBedToTeam)
   const [sala, setSala] = useState('')
   const [cama, setCama] = useState('')
-  const [tab, setTab] = useState('nueva') // 'nueva' | 'existente'
+  const [salaName, setSalaName] = useState('')
+  const [salaCount, setSalaCount] = useState(3)
+  const [tab, setTab] = useState('nueva') // 'nueva' | 'sala' | 'existente'
 
   // Camas del mismo servicio que no están asignadas a ningún equipo
   const allServiceBeds = useVisiStore(selectBedsByService(serviceId))
@@ -72,9 +74,21 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
     [allServiceBeds, assignedIds]
   )
 
+  // Salas existentes en el servicio (para detectar duplicados)
+  const existingSalas = useMemo(() => {
+    const names = new Set()
+    allServiceBeds.forEach(b => {
+      const idx = b.label.indexOf('-')
+      if (idx > 0) names.add(b.label.slice(0, idx).toLowerCase())
+    })
+    return names
+  }, [allServiceBeds])
+
   const canCreate = sala.trim() !== '' && cama.toString().trim() !== ''
-  // Label compuesto: "3-5" o "Norte-12"
   const composedLabel = canCreate ? `${sala.trim()}-${cama.toString().trim()}` : ''
+
+  const salaExists = salaName.trim() !== '' && existingSalas.has(salaName.trim().toLowerCase())
+  const canCreateSala = salaName.trim() !== '' && !salaExists && salaCount >= 1 && salaCount <= 6
 
   function handleCreate(e) {
     e.preventDefault()
@@ -85,6 +99,17 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
     onClose()
   }
 
+  async function handleCreateSala(e) {
+    e.preventDefault()
+    if (!canCreateSala) return
+    for (let i = 1; i <= salaCount; i++) {
+      await createBed({ label: `${salaName.trim()}-${i}`, serviceId, teamId })
+    }
+    setSalaName('')
+    setSalaCount(3)
+    onClose()
+  }
+
   function handleMove(bedId) {
     if (bedId) {
       assignBedToTeam(bedId, serviceId, teamId)
@@ -92,26 +117,32 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
     }
   }
 
+  const TABS = [
+    { id: 'nueva',     label: '+ Cama' },
+    { id: 'sala',      label: '+ Sala' },
+    { id: 'existente', label: `Mover${unassigned.length ? ` (${unassigned.length})` : ''}` },
+  ]
+
   return (
     <div className="px-3 pb-3 pt-2 border-t border-gray-100 bg-gray-50">
       {/* Tabs */}
       <div className="flex gap-1 mb-3">
-        {['nueva', 'existente'].map(t => (
+        {TABS.map(t => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={t.id}
+            onClick={() => setTab(t.id)}
             className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-colors ${
-              tab === t
+              tab === t.id
                 ? 'bg-white text-teal-700 shadow-sm border border-gray-200'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            {t === 'nueva' ? '+ Nueva cama' : `Mover existente${unassigned.length ? ` (${unassigned.length})` : ''}`}
+            {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 'nueva' ? (
+      {tab === 'nueva' && (
         <form onSubmit={handleCreate} className="flex flex-col gap-2">
           <div className="flex gap-2">
             <div className="flex-1">
@@ -151,7 +182,66 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
             </Button>
           </div>
         </form>
-      ) : (
+      )}
+
+      {tab === 'sala' && (
+        <form onSubmit={handleCreateSala} className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5 block">Nombre de sala</label>
+              <input
+                type="text"
+                value={salaName}
+                onChange={e => setSalaName(e.target.value)}
+                placeholder="Ej: 601, Norte, A"
+                className={`w-full text-xs px-2 py-1.5 rounded border focus:outline-none focus:ring-1 bg-white ${
+                  salaExists
+                    ? 'border-red-400 focus:ring-red-400'
+                    : 'border-gray-300 focus:ring-teal-400'
+                }`}
+                autoFocus
+              />
+            </div>
+            <div className="w-20 shrink-0">
+              <label className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5 block">Camas (1–6)</label>
+              <input
+                type="number"
+                min="1"
+                max="6"
+                value={salaCount}
+                onChange={e => setSalaCount(Math.min(6, Math.max(1, Number(e.target.value))))}
+                className="w-full text-xs px-2 py-1.5 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
+              />
+            </div>
+          </div>
+
+          {salaExists && (
+            <p className="text-[10px] text-red-500 font-medium">
+              ⚠ Ya existe una sala con el nombre "{salaName.trim()}" en este servicio.
+            </p>
+          )}
+
+          {canCreateSala && (
+            <p className="text-[10px] text-gray-400">
+              Se crearán:{' '}
+              <span className="font-semibold text-gray-600">
+                {Array.from({ length: salaCount }, (_, i) => `${salaName.trim()}-${i + 1}`).join(', ')}
+              </span>
+            </p>
+          )}
+
+          <div className="flex gap-2">
+            <Button size="sm" variant="primary" type="submit" disabled={!canCreateSala} className="flex-1">
+              Crear sala ({salaCount} cama{salaCount !== 1 ? 's' : ''})
+            </Button>
+            <Button size="sm" variant="ghost" type="button" onClick={onClose}>
+              <X size={13} />
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {tab === 'existente' && (
         <div className="flex gap-2">
           {unassigned.length === 0 ? (
             <p className="text-xs text-gray-400 italic py-1">

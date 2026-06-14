@@ -187,9 +187,17 @@ function FilterChip({ label, active, color, onClick }) {
 
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function Procedimientos() {
-  const allTasks = useVisiStore(s =>
-    Object.values(s.tasks).filter(t => PRESTACION_TYPE_IDS.has(t.type) && t.status !== 'terminada')
-  )
+  const allTasks = useVisiStore(s => {
+    const assignedBedIds = new Set(Object.values(s.teamAssignments).flat())
+    return Object.values(s.tasks).filter(t => {
+      if (!PRESTACION_TYPE_IDS.has(t.type) || t.status === 'terminada') return false
+      const patient = s.patients[t.patientId]
+      if (!patient) return false
+      // Solo mostrar si la cama está asignada a un sector (o es paciente domiciliario sin cama)
+      if (patient.bedId && !assignedBedIds.has(patient.bedId)) return false
+      return true
+    })
+  })
   const patients = useVisiStore(s => s.patients)
   const beds     = useVisiStore(s => s.beds)
   const teams    = useVisiStore(s => s.teams)

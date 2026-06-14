@@ -149,7 +149,15 @@ function EgresoSection({ typeConfig, tasks, patients, beds, teams, selectedServi
 }
 
 export default function Altas() {
-  const tasks    = useVisiStore(s => Object.values(s.tasks))
+  const tasks = useVisiStore(s => {
+    const assignedBedIds = new Set(Object.values(s.teamAssignments).flat())
+    return Object.values(s.tasks).filter(t => {
+      const patient = s.patients[t.patientId]
+      if (!patient) return true // no filtrar si no hay info del paciente
+      if (patient.bedId && !assignedBedIds.has(patient.bedId)) return false
+      return true
+    })
+  })
   const patients = useVisiStore(s => s.patients)
   const beds     = useVisiStore(s => s.beds)
   const teams    = useVisiStore(s => s.teams)

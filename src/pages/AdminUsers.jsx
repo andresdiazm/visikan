@@ -13,10 +13,14 @@ const SETUP_SQL = `create table if not exists public.profiles (
   id           uuid primary key default gen_random_uuid(),
   email        text unique not null,
   display_name text,
+  role         text not null default 'miembro' check (role in ('miembro', 'jefe')),
   is_active    boolean default true,
   created_at   timestamptz default now()
 );
+-- Si la tabla ya existe, agrega la columna role:
+alter table public.profiles add column if not exists role text default 'miembro';
 alter table public.profiles enable row level security;
+drop policy if exists "allow_all" on public.profiles;
 create policy "allow_all" on public.profiles for all using (true);
 grant all on public.profiles to anon, authenticated;`
 
@@ -107,12 +111,18 @@ function PasswordGate({ onUnlock }) {
   )
 }
 
+const ROLES = [
+  { id: 'miembro', label: 'Miembro',  desc: 'Gestión de tareas',             cls: 'border-teal-400 bg-teal-50 text-teal-700' },
+  { id: 'jefe',    label: 'Jefe',     desc: 'Tareas + camas y sectores',      cls: 'border-bay-blue bg-blue-50 text-bay-blue' },
+]
+
 // ── Modal: Crear usuario ──────────────────────────────────────────────────────
 function CreateUserModal({ onClose, onCreated }) {
   const [displayName,     setDisplayName]     = useState('')
   const [email,           setEmail]           = useState('')
   const [password,        setPassword]        = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [role,            setRole]            = useState('miembro')
   const [showPwd,         setShowPwd]         = useState(false)
   const [loading,         setLoading]         = useState(false)
   const [error,           setError]           = useState('')
@@ -143,7 +153,7 @@ function CreateUserModal({ onClose, onCreated }) {
     // 2. Registrar en tabla profiles
     const { error: dbError } = await supabase
       .from('profiles')
-      .insert({ email, display_name: displayName.trim() || null })
+      .insert({ email, display_name: displayName.trim() || null, role })
 
     setLoading(false)
 
@@ -182,6 +192,25 @@ function CreateUserModal({ onClose, onCreated }) {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
             autoFocus
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1.5">Perfil</label>
+          <div className="grid grid-cols-2 gap-2">
+            {ROLES.map(r => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setRole(r.id)}
+                className={`flex flex-col items-start px-3 py-2 rounded-lg border-2 text-left transition-colors ${
+                  role === r.id ? r.cls : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-xs font-semibold">{r.label}</span>
+                <span className="text-[10px] opacity-70 mt-0.5">{r.desc}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div>
@@ -369,47 +398,56 @@ function UsersPanel() {
             <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 border-b border-gray-100">
               <span className="w-8 shrink-0" />
               <span className="flex-1 text-[10px] uppercase tracking-wide text-gray-400 font-medium">Usuario</span>
-              <span className="w-32 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">Creado</span>
+              <span className="w-20 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">Perfil</span>
+              <span className="w-28 text-[10px] uppercase tracking-wide text-gray-400 font-medium shrink-0">Creado</span>
               <span className="w-6 shrink-0" />
             </div>
 
             {/* Filas */}
-            {profiles.map(profile => (
-              <div key={profile.id}
-                className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors group">
+            {profiles.map(profile => {
+              const roleMeta = ROLES.find(r => r.id === profile.role) ?? ROLES[0]
+              return (
+                <div key={profile.id}
+                  className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors group">
 
-                {/* Avatar */}
-                <div className="w-8 h-8 rounded-full bg-bay-blue/10 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-bay-blue">{initials(profile)}</span>
+                  {/* Avatar */}
+                  <div className="w-8 h-8 rounded-full bg-bay-blue/10 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-bay-blue">{initials(profile)}</span>
+                  </div>
+
+                  {/* Nombre + email */}
+                  <div className="flex-1 min-w-0">
+                    {profile.display_name && (
+                      <p className="text-sm font-medium text-gray-800 truncate">{profile.display_name}</p>
+                    )}
+                    <p className={`truncate ${profile.display_name ? 'text-xs text-gray-500' : 'text-sm text-gray-800 font-medium'}`}>
+                      {profile.email}
+                    </p>
+                  </div>
+
+                  {/* Rol badge */}
+                  <span className={`w-20 shrink-0 inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full border text-center ${roleMeta.cls}`}>
+                    {roleMeta.label}
+                  </span>
+
+                  {/* Fecha */}
+                  <span className="w-28 text-xs text-gray-400 shrink-0">{formatDate(profile.created_at)}</span>
+
+                  {/* Eliminar */}
+                  <button
+                    onClick={() => handleDelete(profile)}
+                    disabled={deletingId === profile.id}
+                    className="w-6 text-gray-200 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                    title="Eliminar del listado"
+                  >
+                    {deletingId === profile.id
+                      ? <RefreshCw size={13} className="animate-spin" />
+                      : <Trash2 size={13} />
+                    }
+                  </button>
                 </div>
-
-                {/* Nombre + email */}
-                <div className="flex-1 min-w-0">
-                  {profile.display_name && (
-                    <p className="text-sm font-medium text-gray-800 truncate">{profile.display_name}</p>
-                  )}
-                  <p className={`truncate ${profile.display_name ? 'text-xs text-gray-500' : 'text-sm text-gray-800 font-medium'}`}>
-                    {profile.email}
-                  </p>
-                </div>
-
-                {/* Fecha */}
-                <span className="w-32 text-xs text-gray-400 shrink-0">{formatDate(profile.created_at)}</span>
-
-                {/* Eliminar */}
-                <button
-                  onClick={() => handleDelete(profile)}
-                  disabled={deletingId === profile.id}
-                  className="w-6 text-gray-200 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                  title="Eliminar del listado"
-                >
-                  {deletingId === profile.id
-                    ? <RefreshCw size={13} className="animate-spin" />
-                    : <Trash2 size={13} />
-                  }
-                </button>
-              </div>
-            ))}
+              )
+            })}
           </>
         )}
       </div>
