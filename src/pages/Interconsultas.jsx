@@ -171,11 +171,14 @@ function ServiceSection({ service, tasks, patients, beds, teams, labels }) {
 export default function Interconsultas() {
   const allTasks = useVisiStore(s => {
     const assignedBedIds = new Set(Object.values(s.teamAssignments).flat())
+    const bedIds = new Set(s.beds.map(b => b.id))
     return Object.values(s.tasks).filter(t => {
       if (t.type !== 'interequipo' || t.status === 'terminada') return false
       const patient = s.patients[t.patientId]
       if (!patient) return false
-      if (patient.bedId && !assignedBedIds.has(patient.bedId)) return false
+      if (patient.bedId) {
+        if (!bedIds.has(patient.bedId) || !assignedBedIds.has(patient.bedId)) return false
+      }
       return true
     })
   })
