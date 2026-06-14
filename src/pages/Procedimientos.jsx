@@ -194,11 +194,9 @@ export default function Procedimientos() {
       if (!PRESTACION_TYPE_IDS.has(t.type) || t.status === 'terminada') return false
       const patient = s.patients[t.patientId]
       if (!patient) return false
-      if (patient.bedId) {
-        // La cama debe existir en beds Y estar asignada a un sector
-        if (!bedIds.has(patient.bedId) || !assignedBedIds.has(patient.bedId)) return false
-      }
-      return true
+      if (patient.isHomeCare) return true
+      // Paciente no domiciliario: cama debe existir Y estar asignada a un sector
+      return !!patient.bedId && bedIds.has(patient.bedId) && assignedBedIds.has(patient.bedId)
     })
   })
   const patients = useVisiStore(s => s.patients)

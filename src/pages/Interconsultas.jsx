@@ -176,10 +176,8 @@ export default function Interconsultas() {
       if (t.type !== 'interequipo' || t.status === 'terminada') return false
       const patient = s.patients[t.patientId]
       if (!patient) return false
-      if (patient.bedId) {
-        if (!bedIds.has(patient.bedId) || !assignedBedIds.has(patient.bedId)) return false
-      }
-      return true
+      if (patient.isHomeCare) return true
+      return !!patient.bedId && bedIds.has(patient.bedId) && assignedBedIds.has(patient.bedId)
     })
   })
   const patients = useVisiStore(s => s.patients)

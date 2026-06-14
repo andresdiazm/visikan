@@ -1,8 +1,9 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Activity, ClipboardList, LayoutGrid, LogOut, Menu, Share2, Users } from 'lucide-react'
+import { Activity, ClipboardList, LayoutGrid, Layers, LogOut, Menu, Share2, Users } from 'lucide-react'
 
 const NAV = [
   { label: 'Dashboard',         href: '/',                icon: LayoutGrid    },
+  { label: 'Vista por Sala',    href: '/vista-sala',      icon: Layers        },
   { label: 'Altas y traslados', href: '/altas',           icon: LogOut        },
   { label: 'Interconsultas',    href: '/interconsultas',  icon: Share2        },
   { label: 'Procedimientos',    href: '/procedimientos',  icon: ClipboardList },
