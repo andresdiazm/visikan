@@ -28,7 +28,7 @@ export default function Modal({ title, onClose, children, footer, size = 'md' })
           </button>
         </div>
         {/* Contenido scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 sm:py-5">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-6 sm:py-5">
           {children}
         </div>
         {/* Footer sticky (botones de acción) */}

@@ -22,8 +22,7 @@ export default function TaskEditModal({ task, onClose }) {
   const [type,           setType]           = useState(
     ['examenes','imagenes','procedimiento'].includes(task.type) ? 'solicitud_prestacion' : task.type
   )
-  const [description,    setDescription]    = useState(task.description)
-  const [notes,          setNotes]          = useState(initNotes)
+  const [description, setDescription] = useState(task.description)
   const [priority,       setPriority]       = useState(task.priority || 'normal')
   const [selectedLabels, setSelectedLabels] = useState(task.labels || [])
 
@@ -62,7 +61,7 @@ export default function TaskEditModal({ task, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo, coordinacionTipo, imagenTipo)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, '', socialEstado, prestacionTipo, coordinacionTipo, imagenTipo)
     updateTask(task.id, {
       type,
       description: description.trim(),
@@ -254,33 +253,19 @@ export default function TaskEditModal({ task, onClose }) {
           </div>
         )}
 
-        {/* ── Descripción (opcional) ────────────────────────────────────── */}
+        {/* ── Observación (opcional) ───────────────────────────────────── */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Descripción{' '}
+            Observación{' '}
             <span className="font-normal text-gray-400">(opcional)</span>
           </label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
-            autoFocus
-          />
-        </div>
-
-        {/* ── Notas ─────────────────────────────────────────────────────── */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Notas adicionales{' '}
-            <span className="font-normal text-gray-400">(opcional)</span>
-          </label>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
             placeholder="Observaciones, detalles de seguimiento..."
             rows={2}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
+            autoFocus
           />
         </div>
 

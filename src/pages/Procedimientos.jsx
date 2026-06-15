@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Clock, BedDouble, Home, ArrowRight, ClipboardList, X, AlertTriangle } from 'lucide-react'
 import useVisiStore from '../store/useVisiStore'
-import { SERVICES, PRESTACION_TIPOS } from '../data/hierarchy'
-import { getPrestacionTipo, PRESTACION_TYPE_IDS } from '../lib/taskMeta'
+import { SERVICES, PRESTACION_TIPOS, IMAGEN_TIPOS } from '../data/hierarchy'
+import { getPrestacionTipo, parseNotesMeta, PRESTACION_TYPE_IDS } from '../lib/taskMeta'
+
+const ALL_TASK_TYPE_IDS = new Set([...PRESTACION_TYPE_IDS, 'solicitud_imagen'])
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getContrastColor(hex) {
@@ -191,11 +193,10 @@ export default function Procedimientos() {
     const assignedBedIds = new Set(Object.values(s.teamAssignments).flat())
     const bedIds = new Set(s.beds.map(b => b.id))
     return Object.values(s.tasks).filter(t => {
-      if (!PRESTACION_TYPE_IDS.has(t.type) || t.status === 'terminada') return false
+      if (!ALL_TASK_TYPE_IDS.has(t.type) || t.status === 'terminada') return false
       const patient = s.patients[t.patientId]
       if (!patient) return false
       if (patient.isHomeCare) return true
-      // Paciente no domiciliario: cama debe existir Y estar asignada a un sector
       return !!patient.bedId && bedIds.has(patient.bedId) && assignedBedIds.has(patient.bedId)
     })
   })
@@ -238,11 +239,22 @@ export default function Procedimientos() {
     return true
   }), [allTasks, filterService, filterSector, filterLabels, filter48h])
 
-  // Agrupar por subtipo
+  // Agrupar prestaciones por subtipo
   const bySubtipo = useMemo(() => {
     const map = {}
-    filtered.forEach(t => {
+    filtered.filter(t => t.type !== 'solicitud_imagen').forEach(t => {
       const sub = getPrestacionTipo(t) || '__sin_tipo'
+      if (!map[sub]) map[sub] = []
+      map[sub].push(t)
+    })
+    return map
+  }, [filtered])
+
+  // Agrupar imágenes por subtipo
+  const byImagenTipo = useMemo(() => {
+    const map = {}
+    filtered.filter(t => t.type === 'solicitud_imagen').forEach(t => {
+      const sub = parseNotesMeta(t.notes).imagenTipo || '__sin_tipo'
       if (!map[sub]) map[sub] = []
       map[sub].push(t)
     })
@@ -375,26 +387,36 @@ export default function Procedimientos() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {/* Primero los subtipos definidos, luego sin tipo */}
+          {/* Prestaciones */}
           {PRESTACION_TIPOS.map(subtipo => (
             <SubtipoSection
               key={subtipo.id}
               subtipo={subtipo}
               tasks={bySubtipo[subtipo.id] || []}
-              patients={patients}
-              beds={beds}
-              teams={teams}
-              labels={labels}
+              patients={patients} beds={beds} teams={teams} labels={labels}
             />
           ))}
           {bySubtipo['__sin_tipo']?.length > 0 && (
             <SubtipoSection
               subtipo={{ id: '__sin_tipo', label: 'Sin clasificar', dot: 'bg-gray-400' }}
               tasks={bySubtipo['__sin_tipo']}
-              patients={patients}
-              beds={beds}
-              teams={teams}
-              labels={labels}
+              patients={patients} beds={beds} teams={teams} labels={labels}
+            />
+          )}
+          {/* Imágenes */}
+          {IMAGEN_TIPOS.map(subtipo => (
+            <SubtipoSection
+              key={subtipo.id}
+              subtipo={{ ...subtipo, dot: 'bg-purple-500' }}
+              tasks={byImagenTipo[subtipo.id] || []}
+              patients={patients} beds={beds} teams={teams} labels={labels}
+            />
+          ))}
+          {byImagenTipo['__sin_tipo']?.length > 0 && (
+            <SubtipoSection
+              subtipo={{ id: '__sin_tipo_img', label: 'Imagen sin clasificar', dot: 'bg-purple-300' }}
+              tasks={byImagenTipo['__sin_tipo']}
+              patients={patients} beds={beds} teams={teams} labels={labels}
             />
           )}
         </div>

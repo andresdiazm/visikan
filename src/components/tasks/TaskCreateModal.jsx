@@ -9,10 +9,9 @@ export default function TaskCreateModal({ patient, onClose }) {
   const createTask = useVisiStore(s => s.createTask)
   const labels     = useVisiStore(s => s.labels)
 
-  const [type,           setType]           = useState('')
-  const [description,    setDescription]    = useState('')
-  const [notes,          setNotes]          = useState('')
-  const [priority,       setPriority]       = useState('normal')
+  const [type,        setType]        = useState('')
+  const [description, setDescription] = useState('')
+  const [priority,    setPriority]    = useState('normal')
   const [selectedLabels, setSelectedLabels] = useState([])
 
   // Campos extra según tipo
@@ -50,7 +49,7 @@ export default function TaskCreateModal({ patient, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo, coordinacionTipo, imagenTipo)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, '', socialEstado, prestacionTipo, coordinacionTipo, imagenTipo)
     createTask({
       patientId: patient.id,
       type,
@@ -80,7 +79,7 @@ export default function TaskCreateModal({ patient, onClose }) {
         {/* ── Tipo de tarea ─────────────────────────────────────────────── */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de tarea</label>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5">
             {TASK_TYPES.filter(t => !t.hidden).map(t => (
               <button
                 key={t.id}
@@ -246,32 +245,18 @@ export default function TaskCreateModal({ patient, onClose }) {
           </div>
         )}
 
-        {/* ── Descripción (opcional) ────────────────────────────────────── */}
+        {/* ── Observación (opcional) ───────────────────────────────────── */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">
-            Descripción <span className="font-normal text-gray-400">(opcional)</span>
+            Observación <span className="font-normal text-gray-400">(opcional)</span>
           </label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Describe el pendiente..."
-            rows={1}
+            placeholder="Observaciones, detalles de seguimiento..."
+            rows={2}
             className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
             autoFocus
-          />
-        </div>
-
-        {/* ── Notas ─────────────────────────────────────────────────────── */}
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Notas <span className="font-normal text-gray-400">(opcional)</span>
-          </label>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Observaciones, detalles de seguimiento..."
-            rows={1}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
           />
         </div>
 
