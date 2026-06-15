@@ -4,6 +4,8 @@ export const SERVICES = [
   { id: 'uci',       label: 'UCI',            color: '#AD1457', icon: '❤️' },
   { id: 'uti',       label: 'UTI',            color: '#E65100', icon: '⚡' },
   { id: 'ucor',      label: 'U. Coronaria',   color: '#C62828', icon: '💓' },
+  { id: 'uce',       label: 'U. Cuidados Especiales', color: '#00838F', icon: '⭐' },
+  { id: 'cmq',       label: 'Clínica Médico Quirúrgica', color: '#455A64', icon: '🏥' },
   { id: 'trauma',    label: 'Traumatología',  color: '#4E342E', icon: '🦴' },
   { id: 'urologia',  label: 'Urología',       color: '#1B5E20', icon: '🫀' },
   { id: 'hosdom',    label: 'HosDom',         color: '#4527A0', icon: '🏠' },
