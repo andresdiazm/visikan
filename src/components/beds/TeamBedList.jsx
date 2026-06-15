@@ -58,31 +58,37 @@ function BedRow({ bed, serviceId, teamId, onAssignPatient, onMoveBed }) {
 
 // ── Panel para agregar cama ───────────────────────────────────────────────────
 function AddBedPanel({ serviceId, teamId, onClose }) {
-  const createBed = useVisiStore(s => s.createBed)
-  const assignBedToTeam = useVisiStore(s => s.assignBedToTeam)
-  const [sala, setSala] = useState('')
-  const [cama, setCama] = useState('')
-  const [salaName, setSalaName] = useState('')
+  const createBed      = useVisiStore(s => s.createBed)
+  const moveBedToTeam  = useVisiStore(s => s.moveBedToTeam)
+  const [sala,      setSala]      = useState('')
+  const [cama,      setCama]      = useState('')
+  const [salaName,  setSalaName]  = useState('')
   const [salaCount, setSalaCount] = useState(3)
-  const [tab, setTab] = useState('nueva') // 'nueva' | 'sala' | 'existente'
+  const [bedSearch, setBedSearch] = useState('')
+  const [tab, setTab] = useState('existente') // default: asignar del banco
 
-  // Camas del mismo servicio que no están asignadas a ningún equipo
-  const allServiceBeds = useVisiStore(selectBedsByService(serviceId))
+  // Todas las camas sin asignar a ningún equipo (banco global)
+  const allBeds    = useVisiStore(s => s.beds)
   const assignedIds = new Set(useVisiStore(s => Object.values(s.teamAssignments).flat()))
   const unassigned = useMemo(
-    () => allServiceBeds.filter(b => !assignedIds.has(b.id)),
-    [allServiceBeds, assignedIds]
+    () => [...allBeds.filter(b => !assignedIds.has(b.id))]
+      .sort((a, b) => a.label.localeCompare(b.label, 'es', { numeric: true, sensitivity: 'base' })),
+    [allBeds, assignedIds]
   )
+  const filteredUnassigned = useMemo(() => {
+    const q = bedSearch.trim().toLowerCase()
+    return q ? unassigned.filter(b => b.label.toLowerCase().includes(q)) : unassigned
+  }, [unassigned, bedSearch])
 
-  // Salas existentes en el servicio (para detectar duplicados)
+  // Salas existentes globales (para detectar duplicados al crear)
   const existingSalas = useMemo(() => {
     const names = new Set()
-    allServiceBeds.forEach(b => {
+    allBeds.forEach(b => {
       const idx = b.label.indexOf('-')
       if (idx > 0) names.add(b.label.slice(0, idx).toLowerCase())
     })
     return names
-  }, [allServiceBeds])
+  }, [allBeds])
 
   const canCreate = sala.trim() !== '' && cama.toString().trim() !== ''
   const composedLabel = canCreate ? `${sala.trim()}-${cama.toString().trim()}` : ''
@@ -110,17 +116,17 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
     onClose()
   }
 
-  function handleMove(bedId) {
+  function handleAssign(bedId) {
     if (bedId) {
-      assignBedToTeam(bedId, serviceId, teamId)
+      moveBedToTeam(bedId, serviceId, teamId)
       onClose()
     }
   }
 
   const TABS = [
+    { id: 'existente', label: `Asignar${unassigned.length ? ` (${unassigned.length})` : ''}` },
     { id: 'nueva',     label: '+ Cama' },
     { id: 'sala',      label: '+ Sala' },
-    { id: 'existente', label: `Mover${unassigned.length ? ` (${unassigned.length})` : ''}` },
   ]
 
   return (
@@ -242,25 +248,45 @@ function AddBedPanel({ serviceId, teamId, onClose }) {
       )}
 
       {tab === 'existente' && (
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           {unassigned.length === 0 ? (
             <p className="text-xs text-gray-400 italic py-1">
-              No hay camas sin equipo en este servicio.
+              No hay camas sin asignar en el banco.
             </p>
           ) : (
             <>
-              <select
-                className="flex-1 text-xs px-2 py-1.5 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
-                onChange={e => handleMove(e.target.value)}
-                defaultValue=""
-              >
-                <option value="" disabled>Seleccionar cama...</option>
-                {unassigned.map(b => (
-                  <option key={b.id} value={b.id}>{b.label}</option>
-                ))}
-              </select>
-              <Button size="sm" variant="ghost" type="button" onClick={onClose}>
-                <X size={13} />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={bedSearch}
+                  onChange={e => setBedSearch(e.target.value)}
+                  placeholder="Buscar cama..."
+                  autoFocus
+                  className="w-full text-xs px-2 py-1.5 pr-6 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
+                />
+                {bedSearch && (
+                  <button onClick={() => setBedSearch('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+              {filteredUnassigned.length === 0 ? (
+                <p className="text-xs text-gray-400 italic py-1">Sin resultados.</p>
+              ) : (
+                <div className="max-h-40 overflow-y-auto flex flex-col gap-0.5">
+                  {filteredUnassigned.map(b => (
+                    <button
+                      key={b.id}
+                      onClick={() => handleAssign(b.id)}
+                      className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-teal-50 hover:text-teal-700 text-gray-700 transition-colors"
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <Button size="sm" variant="ghost" type="button" onClick={onClose} className="self-end">
+                Cancelar
               </Button>
             </>
           )}
