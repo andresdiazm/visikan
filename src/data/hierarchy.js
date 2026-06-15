@@ -68,7 +68,13 @@ export const PRESTACION_TIPOS = [
 
 /** Subtipos de Coordinación Externa */
 export const COORDINACION_TIPOS = [
-  { id: 'cardiocx', label: 'CardioCx' },
+  { id: 'cardiocx',  label: 'CardioCx' },
+  { id: 'neurocx',   label: 'NeuroCx' },
+  { id: 'incancer',  label: 'InCancer' },
+  { id: 'horwitz',   label: 'Horwitz' },
+  { id: 'hcuch',     label: 'HCUCH' },
+  { id: 'ugcc',      label: 'UGCC' },
+  { id: 'otro',      label: 'Otro' },
 ]
 
 export const TASK_STATUSES = ['iniciada', 'en_proceso', 'terminada']
