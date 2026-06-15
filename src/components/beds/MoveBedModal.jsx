@@ -63,7 +63,7 @@ export default function MoveBedModal({ beds, bed, onClose }) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Servicio destino <span className="text-red-500">*</span>
           </label>
-          <div className="grid grid-cols-1 gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
             {SERVICES.map(s => (
               <button
                 key={s.id}
