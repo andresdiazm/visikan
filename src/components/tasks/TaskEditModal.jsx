@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { TASK_TYPES, SERVICES, PRESTACION_TIPOS, COORDINACION_TIPOS } from '../../data/hierarchy'
+import { TASK_TYPES, SERVICES, PRESTACION_TIPOS, COORDINACION_TIPOS, IMAGEN_TIPOS } from '../../data/hierarchy'
 import { parseNotesMeta, buildNotesMeta } from '../../lib/taskMeta'
 import useVisiStore from '../../store/useVisiStore'
 
@@ -11,7 +11,8 @@ export default function TaskEditModal({ task, onClose }) {
 
   // Parsear metadatos existentes en notes
   const { destino: initDestino, fechaAlta: initFechaAlta, socialEstado: initSocial,
-          prestacionTipo: initPrestacion, coordinacionTipo: initCoordinacion, userNotes: initNotes } =
+          prestacionTipo: initPrestacion, coordinacionTipo: initCoordinacion,
+          imagenTipo: initImagen, userNotes: initNotes } =
     parseNotesMeta(task.notes)
 
   // Para tipos legacy (examenes, imagenes, procedimiento) derivar subtipo del tipo
@@ -31,6 +32,7 @@ export default function TaskEditModal({ task, onClose }) {
   const [socialEstado,     setSocialEstado]     = useState(initSocial)
   const [prestacionTipo,   setPrestacionTipo]   = useState(derivedPrestacion)
   const [coordinacionTipo, setCoordinacionTipo] = useState(initCoordinacion)
+  const [imagenTipo,       setImagenTipo]       = useState(initImagen)
 
   function handleTypeChange(newType) {
     if (newType !== type) {
@@ -39,6 +41,7 @@ export default function TaskEditModal({ task, onClose }) {
       setSocialEstado('')
       setPrestacionTipo('')
       setCoordinacionTipo('')
+      setImagenTipo('')
     }
     setType(newType)
   }
@@ -47,7 +50,8 @@ export default function TaskEditModal({ task, onClose }) {
     (type !== 'solicitud_traslado'   || destino) &&
     (type !== 'trabajo_social'       || socialEstado) &&
     (type !== 'solicitud_prestacion' || prestacionTipo) &&
-    (type !== 'coordinacion_externa' || coordinacionTipo)
+    (type !== 'coordinacion_externa' || coordinacionTipo) &&
+    (type !== 'solicitud_imagen'     || imagenTipo)
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -58,7 +62,7 @@ export default function TaskEditModal({ task, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo, coordinacionTipo)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo, coordinacionTipo, imagenTipo)
     updateTask(task.id, {
       type,
       description: description.trim(),
@@ -118,6 +122,25 @@ export default function TaskEditModal({ task, onClose }) {
             >
               <option value="">Seleccionar prestación…</option>
               {PRESTACION_TIPOS.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* ── Subtipo de imagen ───────────────────────────────────────── */}
+        {type === 'solicitud_imagen' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de imagen <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={imagenTipo}
+              onChange={e => setImagenTipo(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+            >
+              <option value="">Seleccionar imagen…</option>
+              {IMAGEN_TIPOS.map(opt => (
                 <option key={opt.id} value={opt.id}>{opt.label}</option>
               ))}
             </select>

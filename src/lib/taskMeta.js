@@ -4,10 +4,10 @@
 
 /**
  * Extrae metadatos y notas limpias desde el string raw de notes.
- * @returns {{ destino, fechaAlta, socialEstado, prestacionTipo, coordinacionTipo, userNotes }}
+ * @returns {{ destino, fechaAlta, socialEstado, prestacionTipo, coordinacionTipo, imagenTipo, userNotes }}
  */
 export function parseNotesMeta(notes = '') {
-  let destino = '', fechaAlta = '', socialEstado = '', prestacionTipo = '', coordinacionTipo = ''
+  let destino = '', fechaAlta = '', socialEstado = '', prestacionTipo = '', coordinacionTipo = '', imagenTipo = ''
   const kept = []
   for (const line of (notes || '').split('\n')) {
     if      (line.startsWith('#destino:'))       destino          = line.slice('#destino:'.length)
@@ -15,21 +15,23 @@ export function parseNotesMeta(notes = '') {
     else if (line.startsWith('#social_estado:')) socialEstado     = line.slice('#social_estado:'.length)
     else if (line.startsWith('#prestacion:'))    prestacionTipo   = line.slice('#prestacion:'.length)
     else if (line.startsWith('#coordinacion:'))  coordinacionTipo = line.slice('#coordinacion:'.length)
+    else if (line.startsWith('#imagen:'))        imagenTipo       = line.slice('#imagen:'.length)
     else kept.push(line)
   }
-  return { destino, fechaAlta, socialEstado, prestacionTipo, coordinacionTipo, userNotes: kept.join('\n').replace(/^\n+|\n+$/g, '') }
+  return { destino, fechaAlta, socialEstado, prestacionTipo, coordinacionTipo, imagenTipo, userNotes: kept.join('\n').replace(/^\n+|\n+$/g, '') }
 }
 
 /**
  * Combina metadatos + notas del usuario en el string que se guarda en DB.
  */
-export function buildNotesMeta(destino = '', fechaAlta = '', userNotes = '', socialEstado = '', prestacionTipo = '', coordinacionTipo = '') {
+export function buildNotesMeta(destino = '', fechaAlta = '', userNotes = '', socialEstado = '', prestacionTipo = '', coordinacionTipo = '', imagenTipo = '') {
   const parts = []
   if (destino)          parts.push(`#destino:${destino}`)
   if (fechaAlta)        parts.push(`#fecha_alta:${fechaAlta}`)
   if (socialEstado)     parts.push(`#social_estado:${socialEstado}`)
   if (prestacionTipo)   parts.push(`#prestacion:${prestacionTipo}`)
   if (coordinacionTipo) parts.push(`#coordinacion:${coordinacionTipo}`)
+  if (imagenTipo)       parts.push(`#imagen:${imagenTipo}`)
   const clean = (userNotes || '').trim()
   if (clean) parts.push(clean)
   return parts.join('\n')

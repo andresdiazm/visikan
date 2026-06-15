@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { TASK_TYPES, SERVICES, PRESTACION_TIPOS, COORDINACION_TIPOS } from '../../data/hierarchy'
+import { TASK_TYPES, SERVICES, PRESTACION_TIPOS, COORDINACION_TIPOS, IMAGEN_TIPOS } from '../../data/hierarchy'
 import { buildNotesMeta } from '../../lib/taskMeta'
 import useVisiStore from '../../store/useVisiStore'
 
@@ -21,6 +21,7 @@ export default function TaskCreateModal({ patient, onClose }) {
   const [socialEstado,     setSocialEstado]     = useState('')   // trabajo_social
   const [prestacionTipo,   setPrestacionTipo]   = useState('')   // solicitud_prestacion
   const [coordinacionTipo, setCoordinacionTipo] = useState('')   // coordinacion_externa
+  const [imagenTipo,       setImagenTipo]       = useState('')   // solicitud_imagen
 
   // Resetear campos extra al cambiar tipo
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function TaskCreateModal({ patient, onClose }) {
     setSocialEstado('')
     setPrestacionTipo('')
     setCoordinacionTipo('')
+    setImagenTipo('')
   }, [type])
 
   const canSubmit =
@@ -36,7 +38,8 @@ export default function TaskCreateModal({ patient, onClose }) {
     (type !== 'solicitud_traslado'   || destino) &&
     (type !== 'trabajo_social'       || socialEstado) &&
     (type !== 'solicitud_prestacion' || prestacionTipo) &&
-    (type !== 'coordinacion_externa' || coordinacionTipo)
+    (type !== 'coordinacion_externa' || coordinacionTipo) &&
+    (type !== 'solicitud_imagen'     || imagenTipo)
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -47,7 +50,7 @@ export default function TaskCreateModal({ patient, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo, coordinacionTipo)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo, coordinacionTipo, imagenTipo)
     createTask({
       patientId: patient.id,
       type,
@@ -109,6 +112,26 @@ export default function TaskCreateModal({ patient, onClose }) {
             >
               <option value="">Seleccionar prestación…</option>
               {PRESTACION_TIPOS.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* ── Subtipo de imagen ───────────────────────────────────────── */}
+        {type === 'solicitud_imagen' && (
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Tipo de imagen <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={imagenTipo}
+              onChange={e => setImagenTipo(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+              autoFocus
+            >
+              <option value="">Seleccionar imagen…</option>
+              {IMAGEN_TIPOS.map(opt => (
                 <option key={opt.id} value={opt.id}>{opt.label}</option>
               ))}
             </select>

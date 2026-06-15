@@ -43,6 +43,7 @@ export const TASK_TYPES = [
   { id: 'interequipo',           label: 'Interconsulta',            color: 'bg-yellow-100 text-yellow-800' },
   { id: 'otro',                  label: 'Otro',                     color: 'bg-gray-100 text-gray-800' },
   { id: 'pabellon',              label: 'Pabellón',                 color: 'bg-green-100 text-green-800' },
+  { id: 'solicitud_imagen',      label: 'Solicitud Imagen',         color: 'bg-purple-100 text-purple-800' },
   { id: 'solicitud_prestacion',  label: 'Solicitud de Prestación',  color: 'bg-sky-100 text-sky-800' },
   { id: 'solicitud_traslado',    label: 'Solicitud Traslado',       color: 'bg-rose-100 text-rose-800' },
   { id: 'trabajo_social',        label: 'Social',                   color: 'bg-orange-100 text-orange-800' },
@@ -64,6 +65,16 @@ export const PRESTACION_TIPOS = [
   { id: 'colonoscopia',      label: 'Colonoscopia' },
   { id: 'ercp',              label: 'ERCP' },
   { id: 'gtt',               label: 'GTT' },
+]
+
+/** Subtipos de Solicitud Imagen */
+export const IMAGEN_TIPOS = [
+  { id: 'tac',       label: 'TAC' },
+  { id: 'rnm',       label: 'RNM' },
+  { id: 'angiotac',  label: 'AngioTAC' },
+  { id: 'eco',       label: 'Eco' },
+  { id: 'rx',        label: 'Rx' },
+  { id: 'otro',      label: 'Otro' },
 ]
 
 /** Subtipos de Coordinación Externa */
