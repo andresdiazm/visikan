@@ -4,7 +4,9 @@ import Button from '../ui/Button'
 import { SERVICES } from '../../data/hierarchy'
 import useVisiStore from '../../store/useVisiStore'
 
-export default function MoveBedModal({ bed, onClose }) {
+// Acepta beds (array) o bed (objeto singular, retrocompat)
+export default function MoveBedModal({ beds, bed, onClose }) {
+  const bedList = beds ?? (bed ? [bed] : [])
   const teams        = useVisiStore(s => s.teams)
   const moveBedToTeam = useVisiStore(s => s.moveBedToTeam)
 
@@ -16,33 +18,47 @@ export default function MoveBedModal({ bed, onClose }) {
 
   function handleServiceChange(svcId) {
     setToService(svcId)
-    setToTeam('')   // reset sector al cambiar servicio
+    setToTeam('')
   }
 
   async function handleSubmit() {
     if (!canSubmit) return
-    await moveBedToTeam(bed.id, toService, toTeam || null)
+    await Promise.all(bedList.map(b => moveBedToTeam(b.id, toService, toTeam || null)))
     onClose()
   }
+
+  const title = bedList.length === 1
+    ? `Asignar cama ${bedList[0]?.label}`
+    : `Asignar ${bedList.length} camas`
 
   const footer = (
     <div className="flex gap-2">
       <Button type="button" variant="primary" className="flex-1" disabled={!canSubmit} onClick={handleSubmit}>
-        Mover cama
+        {bedList.length === 1 ? 'Asignar cama' : `Asignar ${bedList.length} camas`}
       </Button>
       <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
     </div>
   )
 
   return (
-    <Modal title={`Mover cama ${bed.label}`} onClose={onClose} footer={footer} size="sm">
+    <Modal title={title} onClose={onClose} footer={footer} size="sm">
       <div className="flex flex-col gap-4">
 
+        {bedList.length > 1 && (
+          <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+            {bedList.map(b => (
+              <span key={b.id} className="text-[11px] px-2 py-0.5 bg-teal-50 border border-teal-200 text-teal-700 rounded-full font-medium">
+                {b.label}
+              </span>
+            ))}
+          </div>
+        )}
+
         <p className="text-sm text-gray-500">
-          Selecciona el servicio y sector destino. Las tareas vinculadas a esta cama se mantendrán.
+          Selecciona el servicio y sector destino.
         </p>
 
-        {/* ── Servicio destino ─────────────────────────────────────────── */}
+        {/* Servicio destino */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Servicio destino <span className="text-red-500">*</span>
@@ -66,7 +82,7 @@ export default function MoveBedModal({ bed, onClose }) {
           </div>
         </div>
 
-        {/* ── Sector destino (opcional) ────────────────────────────────── */}
+        {/* Sector destino */}
         {toService && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -75,11 +91,10 @@ export default function MoveBedModal({ bed, onClose }) {
             </label>
             {availableTeams.length === 0 ? (
               <p className="text-xs text-gray-400 italic">
-                Este servicio no tiene sectores creados. La cama quedará sin sector asignado.
+                Este servicio no tiene sectores. La cama quedará sin sector asignado.
               </p>
             ) : (
               <div className="flex flex-col gap-1">
-                {/* Opción "sin sector" */}
                 <button
                   type="button"
                   onClick={() => setToTeam('')}
