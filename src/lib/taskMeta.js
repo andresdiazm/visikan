@@ -4,30 +4,32 @@
 
 /**
  * Extrae metadatos y notas limpias desde el string raw de notes.
- * @returns {{ destino, fechaAlta, socialEstado, prestacionTipo, userNotes }}
+ * @returns {{ destino, fechaAlta, socialEstado, prestacionTipo, coordinacionTipo, userNotes }}
  */
 export function parseNotesMeta(notes = '') {
-  let destino = '', fechaAlta = '', socialEstado = '', prestacionTipo = ''
+  let destino = '', fechaAlta = '', socialEstado = '', prestacionTipo = '', coordinacionTipo = ''
   const kept = []
   for (const line of (notes || '').split('\n')) {
-    if      (line.startsWith('#destino:'))       destino       = line.slice('#destino:'.length)
-    else if (line.startsWith('#fecha_alta:'))    fechaAlta     = line.slice('#fecha_alta:'.length)
-    else if (line.startsWith('#social_estado:')) socialEstado  = line.slice('#social_estado:'.length)
-    else if (line.startsWith('#prestacion:'))    prestacionTipo = line.slice('#prestacion:'.length)
+    if      (line.startsWith('#destino:'))       destino          = line.slice('#destino:'.length)
+    else if (line.startsWith('#fecha_alta:'))    fechaAlta        = line.slice('#fecha_alta:'.length)
+    else if (line.startsWith('#social_estado:')) socialEstado     = line.slice('#social_estado:'.length)
+    else if (line.startsWith('#prestacion:'))    prestacionTipo   = line.slice('#prestacion:'.length)
+    else if (line.startsWith('#coordinacion:'))  coordinacionTipo = line.slice('#coordinacion:'.length)
     else kept.push(line)
   }
-  return { destino, fechaAlta, socialEstado, prestacionTipo, userNotes: kept.join('\n').replace(/^\n+|\n+$/g, '') }
+  return { destino, fechaAlta, socialEstado, prestacionTipo, coordinacionTipo, userNotes: kept.join('\n').replace(/^\n+|\n+$/g, '') }
 }
 
 /**
  * Combina metadatos + notas del usuario en el string que se guarda en DB.
  */
-export function buildNotesMeta(destino = '', fechaAlta = '', userNotes = '', socialEstado = '', prestacionTipo = '') {
+export function buildNotesMeta(destino = '', fechaAlta = '', userNotes = '', socialEstado = '', prestacionTipo = '', coordinacionTipo = '') {
   const parts = []
-  if (destino)        parts.push(`#destino:${destino}`)
-  if (fechaAlta)      parts.push(`#fecha_alta:${fechaAlta}`)
-  if (socialEstado)   parts.push(`#social_estado:${socialEstado}`)
-  if (prestacionTipo) parts.push(`#prestacion:${prestacionTipo}`)
+  if (destino)          parts.push(`#destino:${destino}`)
+  if (fechaAlta)        parts.push(`#fecha_alta:${fechaAlta}`)
+  if (socialEstado)     parts.push(`#social_estado:${socialEstado}`)
+  if (prestacionTipo)   parts.push(`#prestacion:${prestacionTipo}`)
+  if (coordinacionTipo) parts.push(`#coordinacion:${coordinacionTipo}`)
   const clean = (userNotes || '').trim()
   if (clean) parts.push(clean)
   return parts.join('\n')

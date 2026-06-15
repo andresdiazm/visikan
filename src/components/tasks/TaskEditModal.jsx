@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
-import { TASK_TYPES, SERVICES, PRESTACION_TIPOS } from '../../data/hierarchy'
+import { TASK_TYPES, SERVICES, PRESTACION_TIPOS, COORDINACION_TIPOS } from '../../data/hierarchy'
 import { parseNotesMeta, buildNotesMeta } from '../../lib/taskMeta'
 import useVisiStore from '../../store/useVisiStore'
 
@@ -11,7 +11,7 @@ export default function TaskEditModal({ task, onClose }) {
 
   // Parsear metadatos existentes en notes
   const { destino: initDestino, fechaAlta: initFechaAlta, socialEstado: initSocial,
-          prestacionTipo: initPrestacion, userNotes: initNotes } =
+          prestacionTipo: initPrestacion, coordinacionTipo: initCoordinacion, userNotes: initNotes } =
     parseNotesMeta(task.notes)
 
   // Para tipos legacy (examenes, imagenes, procedimiento) derivar subtipo del tipo
@@ -26,10 +26,11 @@ export default function TaskEditModal({ task, onClose }) {
   const [priority,       setPriority]       = useState(task.priority || 'normal')
   const [selectedLabels, setSelectedLabels] = useState(task.labels || [])
 
-  const [destino,        setDestino]        = useState(initDestino)
-  const [fechaAlta,      setFechaAlta]      = useState(initFechaAlta)
-  const [socialEstado,   setSocialEstado]   = useState(initSocial)
-  const [prestacionTipo, setPrestacionTipo] = useState(derivedPrestacion)
+  const [destino,          setDestino]          = useState(initDestino)
+  const [fechaAlta,        setFechaAlta]        = useState(initFechaAlta)
+  const [socialEstado,     setSocialEstado]     = useState(initSocial)
+  const [prestacionTipo,   setPrestacionTipo]   = useState(derivedPrestacion)
+  const [coordinacionTipo, setCoordinacionTipo] = useState(initCoordinacion)
 
   function handleTypeChange(newType) {
     if (newType !== type) {
@@ -37,15 +38,16 @@ export default function TaskEditModal({ task, onClose }) {
       setFechaAlta('')
       setSocialEstado('')
       setPrestacionTipo('')
+      setCoordinacionTipo('')
     }
     setType(newType)
   }
 
-  // Descripción ahora es opcional
   const canSubmit =
-    (type !== 'solicitud_traslado'  || destino) &&
-    (type !== 'trabajo_social'      || socialEstado) &&
-    (type !== 'solicitud_prestacion'|| prestacionTipo)
+    (type !== 'solicitud_traslado'   || destino) &&
+    (type !== 'trabajo_social'       || socialEstado) &&
+    (type !== 'solicitud_prestacion' || prestacionTipo) &&
+    (type !== 'coordinacion_externa' || coordinacionTipo)
 
   function toggleLabel(id) {
     setSelectedLabels(prev =>
@@ -56,7 +58,7 @@ export default function TaskEditModal({ task, onClose }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
-    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo)
+    const fullNotes = buildNotesMeta(destino, fechaAlta, notes, socialEstado, prestacionTipo, coordinacionTipo)
     updateTask(task.id, {
       type,
       description: description.trim(),
@@ -107,24 +109,37 @@ export default function TaskEditModal({ task, onClose }) {
         {type === 'solicitud_prestacion' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de prestación <span className="text-red-500">*</span>
+              Prestación <span className="text-red-500">*</span>
             </label>
-            <div className="flex gap-2">
+            <select
+              value={prestacionTipo}
+              onChange={e => setPrestacionTipo(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+            >
+              <option value="">Seleccionar prestación…</option>
               {PRESTACION_TIPOS.map(opt => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setPrestacionTipo(opt.id)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    prestacionTipo === opt.id
-                      ? `${opt.color} border-transparent`
-                      : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  {opt.label}
-                </button>
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
               ))}
-            </div>
+            </select>
+          </div>
+        )}
+
+        {/* ── Subtipo de coordinación externa ─────────────────────────── */}
+        {type === 'coordinacion_externa' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Coordinación <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={coordinacionTipo}
+              onChange={e => setCoordinacionTipo(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+            >
+              <option value="">Seleccionar coordinación…</option>
+              {COORDINACION_TIPOS.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
           </div>
         )}
 

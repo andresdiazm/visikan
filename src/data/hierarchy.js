@@ -54,9 +54,21 @@ export const TASK_TYPES = [
 
 /** Subtipos de Solicitud de Prestación */
 export const PRESTACION_TIPOS = [
-  { id: 'examenes',      label: 'Exámenes',      color: 'bg-blue-100 text-blue-800',   dot: 'bg-blue-500'   },
-  { id: 'imagenes',      label: 'Imágenes',      color: 'bg-purple-100 text-purple-800', dot: 'bg-purple-500' },
-  { id: 'procedimiento', label: 'Procedimientos', color: 'bg-cyan-100 text-cyan-800',   dot: 'bg-cyan-500'   },
+  { id: 'ecocardio',         label: 'Ecocardio' },
+  { id: 'holter',            label: 'Holter' },
+  { id: 'coronariografia',   label: 'Coronariografía' },
+  { id: 'cateter_hd',        label: 'Catéter HD' },
+  { id: 'cateter_tnz',       label: 'Catéter TNZ' },
+  { id: 'fibrobroncoscopia', label: 'Fibrobroncoscopia' },
+  { id: 'eda',               label: 'EDA' },
+  { id: 'colonoscopia',      label: 'Colonoscopia' },
+  { id: 'ercp',              label: 'ERCP' },
+  { id: 'gtt',               label: 'GTT' },
+]
+
+/** Subtipos de Coordinación Externa */
+export const COORDINACION_TIPOS = [
+  { id: 'cardiocx', label: 'CardioCx' },
 ]
 
 export const TASK_STATUSES = ['iniciada', 'en_proceso', 'terminada']
